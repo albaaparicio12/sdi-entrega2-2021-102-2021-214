@@ -18,13 +18,11 @@ module.exports = function(app, swig, gestorBD) {
         if(req.body.password != req.body.repetirPassword){
             res.redirect("add?mensaje=Error con las passwords, no coinciden")
         } else{
-            res.send(swig.renderFile('views/opciones.html'));
-
                    gestorBD.insertarUsuario(usuario, function(id){
                        if(id == null){
                            res.redirect("usuario/add?mensaje=Error al registrar al usuario");
                        } else {
-                           res.redirect("usuarios");
+                           res.send(swig.renderFile('views/opciones.html'));
                        }
                    })
         }

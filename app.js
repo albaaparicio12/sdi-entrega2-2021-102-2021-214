@@ -40,7 +40,7 @@ app.use(express.static('public'));
 app.set('port', 8081);
 app.set('clave','abcdefg');
 app.set('crypto',crypto);
-//AQUI TIENE QUE IR app.set('db', "...")
+app.set('db', "mongodb://admin:sdi@wallapop-shard-00-00.j68zr.mongodb.net:27017,wallapop-shard-00-01.j68zr.mongodb.net:27017,wallapop-shard-00-02.j68zr.mongodb.net:27017/wallapop?ssl=true&replicaSet=atlas-v2jild-shard-0&authSource=admin&retryWrites=true&w=majority");
 
 require("./routes/rusuarios.js")(app, swig, gestorBD); // (app, param1, param2, etc.)
 
