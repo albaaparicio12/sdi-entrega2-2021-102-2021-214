@@ -29,9 +29,10 @@
         <li id="mCompras"><a href="/compras">Compras</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-	    <li><a href="/usuario/add"><span class="glyphicon glyphicon-user"></span> Registrate</a></li>
-        <li><a href="/identificarse"><span class="glyphicon glyphicon-log-in"></span> Identifícate</a></li>
-        <li><a href="/desconectarse"><span class="glyphicon glyphicon-log-out"></span> Desconectarse</a></li>
+        <!-- {% if identificado %} {% else %} {% endif %} -->
+        <li id="logout"><a href="/desconectarse"><span class="glyphicon glyphicon-log-out"></span> Cerrar Sesión</a></li>
+        <li id="signup"><a href="/usuario/add"><span class="glyphicon glyphicon-user"></span> Registrate</a></li>
+        <li id="login"><a href="/identificarse"><span class="glyphicon glyphicon-log-in"></span> Identifícate</a></li>
       </ul>
     </div>
   </div>
@@ -39,9 +40,29 @@
 
 
 
-<div class="container">
-
-	<!-- Contenido -->
+  <div class="container">
+    <script>
+      var mensaje = getUrlParameter('mensaje');
+      var tipoMensaje = getUrlParameter('tipoMensaje');
+      // Otra forma de recuperar los parametros de la url pero no compatible con IE
+      /* const params = new URLSearchParams(location.search);
+      var mensaje = params.get("mensaje");
+      var tipoMensaje = params.get("mensaje");*/
+      if ( mensaje != ""){
+        if (tipoMensaje == "" ){
+          tipoMensaje = 'alert-info';
+        }
+        $( ".container" ).append("<div class='alert "+tipoMensaje+"'>"+mensaje+" </div>");
+      }
+      function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' :
+                decodeURIComponent(results[1].replace(/\+/g, ' '));
+      };
+    </script>
+      <!-- Contenido -->
   {% block contenido_principal %}
   <!-- Posible contenido por defecto -->
   {% endblock %}

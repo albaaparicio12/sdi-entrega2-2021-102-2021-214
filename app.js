@@ -23,7 +23,7 @@ var routerUsuarioSession = express.Router();
 routerUsuarioSession.use(function(req, res, next) {
     console.log("routerUsuarioSession");
     if ( req.session.usuario ) {
-        // dejamos correr la petición
+        let respuesta = {identificado: true};
         next();
     } else {
         console.log("va a : "+req.session.destino)
@@ -33,6 +33,22 @@ routerUsuarioSession.use(function(req, res, next) {
 
 //Aplicar routerUsuarioSession
 //app.use("/canciones/agregar",routerUsuarioSession);
+
+//routerUsuarioAutor
+let routerUsuarioAdmin = express.Router();
+routerUsuarioAdmin.use(function(req, res, next) {
+    console.log("routerUsuarioAdmin");
+    if ( req.session.usuario === "admin@email.com" ) {
+        next();
+    } else {
+        console.log("va a : "+req.session.destino);
+        res.redirect("/identificarse");
+    }
+});
+
+//Aplicar routerUsuarioAutor
+app.use("/usuario/listado",routerUsuarioAdmin);
+app.use("/usuario/borrar",routerUsuarioAdmin);
 
 app.use(express.static('public'));
 
