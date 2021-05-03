@@ -30,7 +30,11 @@ module.exports = function(app, swig, gestorBD) {
                         if (id == null) {
                             res.redirect("/usuario/add?mensaje=Error al registrar al usuario &tipoMensaje=alert-danger");
                         } else {
-                            res.send(swig.renderFile('views/opciones.html'));
+                            res.send(swig.renderFile('views/opciones.html',
+                                {
+                                    login : "desconectarse",
+                                    usuario : usuario
+                                }));
                         }
                     });
                 }
@@ -40,7 +44,9 @@ module.exports = function(app, swig, gestorBD) {
     })
 
     app.get("/identificarse", function(req, res) {
-        let respuesta = swig.renderFile('views/bidentificacion.html');
+        let respuesta = swig.renderFile('views/bidentificacion.html',{
+            login : "identificarse"
+        });
         res.send(respuesta);
     });
 
@@ -58,11 +64,17 @@ module.exports = function(app, swig, gestorBD) {
                     "?mensaje=Email o password incorrecto"+
                     "&tipoMensaje=alert-danger ");
             } else {
-                req.session.usuario = usuarios[0].email;
-                if(req.session.usuario == "admin@email.com"){
-                    res.send(swig.renderFile('views/opcionesAdmin.html'))
+                req.session.usuario = usuarios[0];
+                if(req.session.usuario.email == "admin@email.com"){
+                    res.send(swig.renderFile('views/opcionesAdmin.html',{
+                        usuario : req.session.usuario,
+                        login : "desconectarse"
+                    }));
                 } else {
-                    res.send(swig.renderFile('views/opciones.html'));
+                    res.send(swig.renderFile('views/opciones.html',{
+                        usuario : req.session.usuario,
+                        login : "desconectarse"
+                    }));
                 }
             }
         });
@@ -82,7 +94,9 @@ module.exports = function(app, swig, gestorBD) {
                 let listaSinAdmin = lista.filter((user) => user.email !== "admin@email.com");
                 let respuesta = swig.renderFile('views/listado.html',
                     {
-                        listado : listaSinAdmin
+                        listado : listaSinAdmin,
+                        usuario : req.session.usuario,
+                        login : "desconectarse"
                     });
                 res.send(respuesta);
             }
@@ -98,12 +112,18 @@ module.exports = function(app, swig, gestorBD) {
                     if (result == null) {
                         res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
                     } else {
-                        res.send(swig.renderFile('views/listado.html'));
+                        res.send(swig.renderFile('views/listado.html',{
+                            usuario : req.session.usuario,
+                            login : "desconectarse"
+                        }));
                     }
                 });
             }
         }else{
-            res.send(swig.renderFile('views/listado.html'));
+            res.send(swig.renderFile('views/listado.html',{
+                usuario : req.session.usuario,
+                login : "desconectarse"
+            }));
         }
     });
 

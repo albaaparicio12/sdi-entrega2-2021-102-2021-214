@@ -24,15 +24,17 @@
     </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        <li id="mTienda" class="active"><a href="/tienda">Tienda</a></li>
-		<li id="mPublicaciones"><a href="/publicaciones">Publicaciones</a></li>
-        <li id="mCompras"><a href="/compras">Compras</a></li>
+        <li id="mTienda" class="active"><a href="/oferta/tienda">Tienda</a></li>
+		<li id="mPublicaciones"><a href="/oferta/listado">Publicaciones</a></li>
+        <li id="mAñadir"><a href="/oferta/add">Añadir Oferta</a></li>
+        <li id="mCompras"><a href="/oferta/compras">Compras</a></li>
+        <li id="mDinero"><a >Dinero: {{usuario.dinero}}</a></li>
+        <li id="mEmail"><a>{{usuario.email}}</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <!-- {% if identificado %} {% else %} {% endif %} -->
-        <li id="logout"><a href="/desconectarse"><span class="glyphicon glyphicon-log-out"></span> Cerrar Sesión</a></li>
+        <li id="logout"><a href="/{{ login }}"><span class="glyphicon glyphicon-log-out"></span> {{ login }}</a></li>
         <li id="signup"><a href="/usuario/add"><span class="glyphicon glyphicon-user"></span> Registrate</a></li>
-        <li id="login"><a href="/identificarse"><span class="glyphicon glyphicon-log-in"></span> Identifícate</a></li>
       </ul>
     </div>
   </div>

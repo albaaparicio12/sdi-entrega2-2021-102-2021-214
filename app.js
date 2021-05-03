@@ -8,9 +8,10 @@ app.use(expressSession({
     resave: true,
     saveUninitialized: true
 }));
+
+let mongo = require('mongodb');
 let swig = require('swig');
 let crypto = require('crypto');
-let mongo = require('mongodb');
 let bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -32,10 +33,9 @@ routerUsuarioSession.use(function(req, res, next) {
 });
 
 //Aplicar routerUsuarioSession
-//app.use("/canciones/agregar",routerUsuarioSession);
 app.use("/oferta/",routerUsuarioSession);
 
-//routerUsuarioAutor
+//routerUsuarioAdmin
 let routerUsuarioAdmin = express.Router();
 routerUsuarioAdmin.use(function(req, res, next) {
     console.log("routerUsuarioAdmin");
@@ -47,7 +47,7 @@ routerUsuarioAdmin.use(function(req, res, next) {
     }
 });
 
-//Aplicar routerUsuarioAutor
+//Aplicar routerUsuarioAdmin
 app.use("/usuario/listado",routerUsuarioAdmin);
 app.use("/usuario/borrar",routerUsuarioAdmin);
 
