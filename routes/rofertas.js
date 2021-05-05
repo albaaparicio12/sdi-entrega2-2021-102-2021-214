@@ -15,13 +15,32 @@ module.exports = function (app, swig, gestorBD) {
             fecha: Date.now(),
             precio: req.body.precio,
             disponible: "Comprar",
-            comprador: null
+            comprador: null,
+            destacada: req.body.boxDestacada
         }
         gestorBD.insertarOferta(oferta, function (id) {
             if (id == null) {
                 res.redirect("/oferta/add?mensaje=Error al insertar la oferta &tipoMensaje=alert-danger");
             } else {
-                res.redirect("/oferta/listado");
+                let criterioAux = {"_id": gestorBD.mongo.ObjectID(req.session.usuario.id)};
+                let usuario = req.session.usuario;
+                if(oferta.destacada == "true"){
+                    if(usuario.dinero >= 20){
+                        usuario.dinero = usuario.dinero-20;
+                        gestorBD.modificarUsuario(criterioAux,usuario,function(id){
+                            if(id == null){
+                                res.send("Error al insertar la oferta y restar el dinero");
+                            } else {
+                                res.redirect("/oferta/listado");
+                            }
+                        })
+                    } else {
+                        res.redirect("/oferta/listado&mensaje=Error - No tienes suficiente dinero!&tipoMensaje=alert-danger");
+                    }
+                } else {
+                    res.redirect("/oferta/listado");
+                }
+
             }
         });
 
@@ -68,6 +87,24 @@ module.exports = function (app, swig, gestorBD) {
             }
         });
     });
+
+    app.get("/oferta/destacadas", function(req,res){
+        let criterio = {"destacada": "true"};
+
+        gestorBD.obtenerOfertas(criterio, function (lista) {
+            if (lista == null) {
+                res.send("Error al listar ofertas");
+            } else {
+                let respuesta = swig.renderFile('views/listadoDestacadas.html',
+                    {
+                        listado: lista,
+                        login : "desconectarse",
+                        usuario : req.session.usuario
+                    });
+                res.send(respuesta);
+            }
+        });
+    })
 
     app.get("/oferta/tienda", function(req, res) {
         let criterio = {};
@@ -131,7 +168,8 @@ module.exports = function (app, swig, gestorBD) {
                         fecha: lista[0].fecha,
                         precio: lista[0].precio,
                         disponible: "Vendido",
-                        comprador: gestorBD.mongo.ObjectID(req.session.usuario._id)
+                        comprador: gestorBD.mongo.ObjectID(req.session.usuario._id),
+                        detacada: lista[0].destacada
                     }
                     gestorBD.modificarOferta(criterio, oferta, function(result){
                         if(result == null){
@@ -140,8 +178,6 @@ module.exports = function (app, swig, gestorBD) {
                             res.redirect("/oferta/tienda");
                         }
                     })
-                    //lista[0].disponible = "Vendido";
-
                 } else {
                     res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
                         "no tienes suficiente dinero &tipoMensaje=alert-danger");
@@ -166,6 +202,45 @@ module.exports = function (app, swig, gestorBD) {
                 res.send(respuesta);
             }
         });
+    })
+
+    app.get("/oferta/destacar/:id", function(req, res){
+        let criterio = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
+
+        gestorBD.obtenerOfertas(criterio, function(result){
+            if(result == null){
+                res.send("Error al listar ofertas");
+            } else {
+                if(result[0].destacada == "true"){
+                    res.redirect("/oferta/listado?mensaje=Error - Ya está destacada&tipoMensaje=alert-danger");
+                } else{
+                    let oferta = result[0];
+                    oferta.destacada = "true";
+                    gestorBD.modificarOferta(criterio,oferta, function (resu) {
+                        if (resu == null) {
+                            res.send("Error al listar ofertas2");
+                        } else {
+                            let criterioAux = {"_id" : req.session.usuario.id}
+                            let usuario = req.session.usuario;
+                            if(usuario.dinero < 20){
+                                res.redirect("/oferta/listado?mensaje=Error - No tienes dinero suficiente!&tipoMensaje=alert-danger");
+                            } else {
+                                usuario.dinero = usuario.dinero - 20;
+                                gestorBD.modificarUsuario(criterioAux,usuario,function(id){
+                                    if(id == null){
+                                        res.send("Error al insertar la oferta y restar el dinero");
+                                    } else {
+                                        res.redirect("/oferta/listado");
+                                    }
+                                })
+                            }
+
+                        }
+                    });
+                }
+
+            }
+        })
     })
 
 };

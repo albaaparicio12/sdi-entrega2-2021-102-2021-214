@@ -33,6 +33,7 @@ routerUsuarioSession.use(function(req, res, next) {
 });
 
 //Aplicar routerUsuarioSession
+app.use("/oferta/destacadas",routerUsuarioSession);
 app.use("/oferta/",routerUsuarioSession);
 
 //routerUsuarioAdmin

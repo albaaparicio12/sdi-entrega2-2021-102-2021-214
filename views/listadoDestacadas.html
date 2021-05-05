@@ -3,7 +3,7 @@
 {% block titulo %} Listado de ofertas {% endblock %}
 
 {% block contenido_principal %}
-<h2>Listado de ofertas</h2>
+<h2>Listado de Ofertas Destacadas</h2>
 <div class="col-xs-6 col-sm-6 col-md-4 col-lg-3">
     <form class="form-horizontal">
         <table class="table table-hover" id="tableOffers">
@@ -14,7 +14,6 @@
                 <th>Fecha</th>
                 <th>Precio</th>
                 <th></th>
-                <th></th>
             </tr>
             </thead>
             {% for oferta in listado %}
@@ -24,8 +23,7 @@
                 <th>{{ oferta.detalles }}</th>
                 <th>{{ oferta.fecha }}</th>
                 <th>{{ oferta.precio }}</th>
-                <th> <a href="/oferta/borrar/{{ oferta._id.toString() }}">Eliminar</a> </th>
-                <th> <a href="/oferta/destacar/{{ oferta._id.toString() }}">Destacar</a> </th>
+                <th><a href="/oferta/{{ oferta._id.toString() }}">{{oferta.disponible}}</a></th>
             </tr>
             </tbody>
             {% endfor %}
