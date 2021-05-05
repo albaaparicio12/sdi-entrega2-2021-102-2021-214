@@ -72,7 +72,7 @@ module.exports = function (app, swig, gestorBD) {
     app.get("/oferta/tienda", function(req, res) {
         let criterio = {};
         if( req.query.busqueda != null ){
-            criterio = { "titulo" : req.query.busqueda };
+            criterio = { "titulo" :  {$regex : ".*"+req.query.busqueda+".*"}};
         }
 
         let pg = parseInt(req.query.pg);
@@ -127,7 +127,7 @@ module.exports = function (app, swig, gestorBD) {
                         fecha: lista[0].fecha,
                         precio: lista[0].precio,
                         disponible: "Vendido",
-                        comprador: req.session.usuario._id
+                        comprador: req.session.usuario.id
                     }
                     gestorBD.modificarOferta(criterio, oferta, function(result){
                         if(result == null){
@@ -142,13 +142,12 @@ module.exports = function (app, swig, gestorBD) {
                     res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
                         "no tienes suficiente dinero &tipoMensaje=alert-danger");
                 }
-
             }
         });
     });
 
-    app.get("/oferta/compras", function(req,res){
-        let criterio = {"comprador" : req.session.usuario._id};
+    app.get("/oferta/compras/:id", function(req,res){
+        let criterio = {"comprador": gestorBD.mongo.ObjectID(req.params.id)};
 
         gestorBD.obtenerOfertas(criterio, function (lista) {
             if (lista == null) {
