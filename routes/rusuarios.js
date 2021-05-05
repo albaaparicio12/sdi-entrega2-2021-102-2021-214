@@ -1,6 +1,8 @@
 module.exports = function(app, swig, gestorBD) {
     app.get("/usuario/add", function(req, res) {
-        let respuesta = swig.renderFile('views/bregistro.html',{});
+        let respuesta = swig.renderFile('views/bregistro.html',{
+            identificado: (req.session.usuario !== null)? true : false
+        });
         res.send(respuesta);
     });
 
@@ -32,7 +34,7 @@ module.exports = function(app, swig, gestorBD) {
                         } else {
                             res.send(swig.renderFile('views/opciones.html',
                                 {
-                                    login : "desconectarse",
+                                    identificado: (req.session.usuario !== null)? true : false,
                                     usuario : usuario
                                 }));
                         }
@@ -45,7 +47,7 @@ module.exports = function(app, swig, gestorBD) {
 
     app.get("/identificarse", function(req, res) {
         let respuesta = swig.renderFile('views/bidentificacion.html',{
-            login : "identificarse"
+            identificado: (req.session.usuario !== null)? true : false
         });
         res.send(respuesta);
     });
@@ -68,12 +70,12 @@ module.exports = function(app, swig, gestorBD) {
                 if(req.session.usuario.email == "admin@email.com"){
                     res.send(swig.renderFile('views/opcionesAdmin.html',{
                         usuario : req.session.usuario,
-                        login : "desconectarse"
+                        identificado: (req.session.usuario !== null)? true : false
                     }));
                 } else {
                     res.send(swig.renderFile('views/opciones.html',{
                         usuario : req.session.usuario,
-                        login : "desconectarse"
+                        identificado: (req.session.usuario !== null)? true : false
                     }));
                 }
             }
@@ -96,7 +98,7 @@ module.exports = function(app, swig, gestorBD) {
                     {
                         listado : listaSinAdmin,
                         usuario : req.session.usuario,
-                        login : "desconectarse"
+                        identificado: (req.session.usuario !== null)? true : false
                     });
                 res.send(respuesta);
             }
@@ -114,7 +116,7 @@ module.exports = function(app, swig, gestorBD) {
                     } else {
                         res.send(swig.renderFile('views/opcionesAdmin.html',{
                             usuario : req.session.usuario,
-                            login : "desconectarse"
+                            identificado: (req.session.usuario !== null)? true : false
                         }));
                     }
                 });
@@ -122,7 +124,7 @@ module.exports = function(app, swig, gestorBD) {
         }else{
             res.send(swig.renderFile('views/listado.html',{
                 usuario : req.session.usuario,
-                login : "desconectarse"
+                identificado: (req.session.usuario !== null)? true : false
             }));
         }
     });

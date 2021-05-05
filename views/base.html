@@ -25,17 +25,24 @@
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
         <li id="mTienda" class="active"><a href="/oferta/tienda">Tienda</a></li>
-		<li id="mPublicaciones"><a href="/oferta/listado">Publicaciones</a></li>
+		<li id="mPublicaciones"><a href="/oferta/listado">Ofertas</a></li>
         <li id="mAñadir"><a href="/oferta/add">Añadir Oferta</a></li>
         <li id="mCompras"><a href="/oferta/compras/{{usuario._id.toString()}}">Compras</a></li>
         <li id="mDestacadas"><a href="/oferta/destacadas">Destacadas</a></li>
+        {% if identificado %}
         <li id="mDinero"><a >Dinero: {{usuario.dinero}}</a></li>
         <li id="mEmail"><a>{{usuario.email}}</a></li>
+        {% else %}
+        {% endif %}
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        <!-- {% if identificado %} {% else %} {% endif %} -->
-        <li id="logout"><a href="/{{ login }}"><span class="glyphicon glyphicon-log-out"></span> {{ login }}</a></li>
-        <li id="signup"><a href="/usuario/add"><span class="glyphicon glyphicon-user"></span> Registrate</a></li>
+        {% if identificado %}
+          <li id="logout"><a href="/desconectarse"><span class="glyphicon glyphicon-log-out"></span>Desconectarse</a></li>
+        {% else %}
+          <li id="login"><a href="/identificarse"><span class="glyphicon glyphicon-log-out"></span>Iniciar Sesión</a></li>
+          <li id="signup"><a href="/usuario/add"><span class="glyphicon glyphicon-user"></span> Registrate</a></li>
+        {% endif %}
+
       </ul>
     </div>
   </div>
