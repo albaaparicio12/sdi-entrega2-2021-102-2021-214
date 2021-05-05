@@ -1,7 +1,7 @@
 module.exports = function(app, swig, gestorBD) {
     app.get("/usuario/add", function(req, res) {
         let respuesta = swig.renderFile('views/bregistro.html',{
-            identificado: (req.session.usuario !== null)? true : false
+            identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
         });
         res.send(respuesta);
     });
@@ -32,11 +32,13 @@ module.exports = function(app, swig, gestorBD) {
                         if (id == null) {
                             res.redirect("/usuario/add?mensaje=Error al registrar al usuario &tipoMensaje=alert-danger");
                         } else {
-                            res.send(swig.renderFile('views/opciones.html',
+                            req.session.usuario = usuario;
+                            let respuesta = swig.renderFile('views/opciones.html',
                                 {
-                                    identificado: (req.session.usuario !== null)? true : false,
+                                    identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false,
                                     usuario : usuario
-                                }));
+                                });
+                            res.send(respuesta);
                         }
                     });
                 }
@@ -47,7 +49,7 @@ module.exports = function(app, swig, gestorBD) {
 
     app.get("/identificarse", function(req, res) {
         let respuesta = swig.renderFile('views/bidentificacion.html',{
-            identificado: (req.session.usuario !== null)? true : false
+            identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
         });
         res.send(respuesta);
     });
@@ -67,17 +69,19 @@ module.exports = function(app, swig, gestorBD) {
                     "&tipoMensaje=alert-danger ");
             } else {
                 req.session.usuario = usuarios[0];
+                let respuesta;
                 if(req.session.usuario.email == "admin@email.com"){
-                    res.send(swig.renderFile('views/opcionesAdmin.html',{
+                    respuesta = swig.renderFile('views/opcionesAdmin.html',{
                         usuario : req.session.usuario,
-                        identificado: (req.session.usuario !== null)? true : false
-                    }));
+                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
+                    });
                 } else {
-                    res.send(swig.renderFile('views/opciones.html',{
+                    respuesta =swig.renderFile('views/opciones.html',{
                         usuario : req.session.usuario,
-                        identificado: (req.session.usuario !== null)? true : false
-                    }));
+                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
+                    });
                 }
+                res.send(respuesta);
             }
         });
     });
@@ -98,7 +102,7 @@ module.exports = function(app, swig, gestorBD) {
                     {
                         listado : listaSinAdmin,
                         usuario : req.session.usuario,
-                        identificado: (req.session.usuario !== null)? true : false
+                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
                     });
                 res.send(respuesta);
             }
@@ -114,18 +118,20 @@ module.exports = function(app, swig, gestorBD) {
                     if (result == null) {
                         res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
                     } else {
-                        res.send(swig.renderFile('views/opcionesAdmin.html',{
+                        let respuesta = swig.renderFile('views/opcionesAdmin.html',{
                             usuario : req.session.usuario,
-                            identificado: (req.session.usuario !== null)? true : false
-                        }));
+                            identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
+                        });
+                        res.send(respuesta);
                     }
                 });
             }
         }else{
-            res.send(swig.renderFile('views/listado.html',{
+            let respuesta = swig.renderFile('views/listado.html',{
                 usuario : req.session.usuario,
-                identificado: (req.session.usuario !== null)? true : false
-            }));
+                identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
+            });
+            res.send(respuesta);
         }
     });
 

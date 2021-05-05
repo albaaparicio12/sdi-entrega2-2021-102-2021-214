@@ -1,7 +1,7 @@
 module.exports = function (app, swig, gestorBD) {
     app.get("/oferta/add", function (req, res) {
         let respuesta = swig.renderFile('views/bofertaNueva.html', {
-            identificado: (req.session.usuario !== null)? true : false,
+            identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false,
             usuario : req.session.usuario
         });
         res.send(respuesta);
@@ -60,7 +60,7 @@ module.exports = function (app, swig, gestorBD) {
                         let respuesta = swig.renderFile('views/listadoOfertas.html',
                             {
                                 listado: lista,
-                                identificado: (req.session.usuario !== null)? true : false,
+                                identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false,
                                 usuario : req.session.usuario
                             });
                         res.send(respuesta);
@@ -80,7 +80,7 @@ module.exports = function (app, swig, gestorBD) {
                 let respuesta = swig.renderFile('views/listadoOfertas.html',
                     {
                         listado: lista,
-                        identificado: (req.session.usuario !== null)? true : false,
+                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false,
                         usuario : req.session.usuario
                     });
                 res.send(respuesta);
@@ -98,7 +98,7 @@ module.exports = function (app, swig, gestorBD) {
                 let respuesta = swig.renderFile('views/listadoDestacadas.html',
                     {
                         listado: lista,
-                        identificado: (req.session.usuario !== null)? true : false,
+                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false,
                         usuario : req.session.usuario
                     });
                 res.send(respuesta);
@@ -137,7 +137,7 @@ module.exports = function (app, swig, gestorBD) {
                         paginas : paginas,
                         actual : pg,
                         usuario : req.session.usuario,
-                        identificado: (req.session.usuario !== null)? true : false
+                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
                     });
                 res.send(respuesta);
             }
@@ -196,7 +196,7 @@ module.exports = function (app, swig, gestorBD) {
                 let respuesta = swig.renderFile('views/listadoCompras.html',
                     {
                         listado: lista,
-                        identificado: (req.session.usuario !== null)? true : false,
+                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false,
                         usuario : req.session.usuario
                     });
                 res.send(respuesta);
