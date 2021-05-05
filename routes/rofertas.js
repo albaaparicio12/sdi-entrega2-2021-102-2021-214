@@ -9,7 +9,7 @@ module.exports = function (app, swig, gestorBD) {
 
     app.post('/oferta/add', function (req, res) {
         let oferta = {
-            usuario: req.session.usuario.id,
+            usuario: gestorBD.mongo.ObjectID(req.session.usuario.id),
             titulo: req.body.titulo,
             detalles: req.body.detalles,
             fecha: Date.now(),
