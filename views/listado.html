@@ -21,7 +21,7 @@
                 <th>{{ usuario.nombre }}</th>
                 <th>{{ usuario.apellidos }}</th>
                 <th>{{ usuario.email }}</th>
-                <th> <input class="form-check-input" type="checkbox" name="box" value={{usuario.email}} id={{usuario.email}}> </th>
+                <th> <input class="form-check-input" type="checkbox" name="box[]" value={{usuario.email}} id={{usuario.email}} > </th>
               </tr>
           </tbody>
         {% endfor %}

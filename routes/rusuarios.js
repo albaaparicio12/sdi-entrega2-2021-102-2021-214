@@ -117,21 +117,17 @@ module.exports = function(app, swig, gestorBD) {
                 gestorBD.eliminarUsuario(criterio, function (result) {
                     if (result == null) {
                         res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
-                    } else {
-                        let respuesta = swig.renderFile('views/opcionesAdmin.html',{
-                            usuario : req.session.usuario,
-                            identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
-                        });
-                        res.send(respuesta);
                     }
                 });
             }
-        }else{
-            let respuesta = swig.renderFile('views/listado.html',{
+            let respuesta = swig.renderFile('views/opcionesAdmin.html',{
                 usuario : req.session.usuario,
                 identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
             });
             res.send(respuesta);
+        }
+        else{
+            res.redirect("/usuario/listado");
         }
     });
 
