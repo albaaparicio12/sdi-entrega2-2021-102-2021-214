@@ -112,7 +112,7 @@ module.exports = function(app, swig, gestorBD) {
                     if (result == null) {
                         res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
                     } else {
-                        res.send(swig.renderFile('views/listado.html',{
+                        res.send(swig.renderFile('views/opcionesAdmin.html',{
                             usuario : req.session.usuario,
                             login : "desconectarse"
                         }));

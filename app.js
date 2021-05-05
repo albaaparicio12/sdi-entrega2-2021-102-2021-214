@@ -39,7 +39,7 @@ app.use("/oferta/",routerUsuarioSession);
 let routerUsuarioAdmin = express.Router();
 routerUsuarioAdmin.use(function(req, res, next) {
     console.log("routerUsuarioAdmin");
-    if ( req.session.usuario === "admin@email.com" ) {
+    if ( req.session.usuario.email === "admin@email.com" ) {
         next();
     } else {
         console.log("va a : "+req.session.destino);

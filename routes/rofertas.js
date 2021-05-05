@@ -9,7 +9,7 @@ module.exports = function (app, swig, gestorBD) {
 
     app.post('/oferta/add', function (req, res) {
         let oferta = {
-            usuario: req.session.usuario,
+            usuario: req.session.usuario.id,
             titulo: req.body.titulo,
             detalles: req.body.detalles,
             fecha: Date.now(),
@@ -29,7 +29,7 @@ module.exports = function (app, swig, gestorBD) {
 
     app.get("/oferta/borrar/:id", function (req, res) {
         let criterio = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
-        let criterioU = {"usuario": req.session.usuario};
+        let criterioU = {"usuario": req.session.usuario.id};
         gestorBD.eliminarOferta(criterio, function (result) {
             if (result == null) {
                 res.redirect("/oferta/borrar?mensaje=Error al borrar ofertas &tipoMensaje=alert-danger");
@@ -53,7 +53,7 @@ module.exports = function (app, swig, gestorBD) {
     });
 
     app.get('/oferta/listado', function (req, res) {
-        let criterio = {"usuario": req.session.usuario};
+        let criterio = {"usuario": req.session.usuario.id};
         gestorBD.obtenerOfertas(criterio, function (lista) {
             if (lista == null) {
                 res.send("Error al listar ofertas");
@@ -118,6 +118,10 @@ module.exports = function (app, swig, gestorBD) {
                     res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
                         "ya está vendida &tipoMensaje=alert-danger");
                 }
+//                else if(lista[0].usuario == req.session.usuario.id){
+//                    res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
+//                        "es tu oferta &tipoMensaje=alert-danger");
+//                }
                 else if(lista[0].precio <= req.session.usuario.dinero){
                     req.session.usuario.dinero = req.session.usuario.dinero - lista[0].precio;
                     let oferta = {
@@ -146,8 +150,8 @@ module.exports = function (app, swig, gestorBD) {
         });
     });
 
-    app.get("/oferta/compras/:_id", function(req,res){
-        let criterio = {"comprador": gestorBD.mongo.ObjectID(req.params._id)};
+    app.get("/oferta/compras/:id", function(req,res){
+        let criterio = {"comprador": gestorBD.mongo.ObjectID(req.params.id)};
 
         gestorBD.obtenerOfertas(criterio, function (lista) {
             if (lista == null) {
