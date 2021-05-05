@@ -127,7 +127,7 @@ module.exports = function (app, swig, gestorBD) {
                         fecha: lista[0].fecha,
                         precio: lista[0].precio,
                         disponible: "Vendido",
-                        comprador: req.session.usuario.id
+                        comprador: gestorBD.mongo.ObjectID(req.session.usuario._id)
                     }
                     gestorBD.modificarOferta(criterio, oferta, function(result){
                         if(result == null){
@@ -146,8 +146,8 @@ module.exports = function (app, swig, gestorBD) {
         });
     });
 
-    app.get("/oferta/compras/:id", function(req,res){
-        let criterio = {"comprador": gestorBD.mongo.ObjectID(req.params.id)};
+    app.get("/oferta/compras/:_id", function(req,res){
+        let criterio = {"comprador": gestorBD.mongo.ObjectID(req.params._id)};
 
         gestorBD.obtenerOfertas(criterio, function (lista) {
             if (lista == null) {
