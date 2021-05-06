@@ -32,6 +32,7 @@
                 <div class="text-right">{{ oferta.precio }} €</div>
             </a>
             <a href="/oferta/comprar/{{ oferta._id.toString() }}">{{oferta.disponible}}</a>
+            <a href="/oferta/mensaje/{{ oferta._id.toString() }}">Mandar mensaje</a>
         </div>
     </div>
     {% endfor %}

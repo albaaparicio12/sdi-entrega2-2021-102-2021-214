@@ -8,12 +8,31 @@ module.exports = function(app, gestorBD) {
                     error : "se ha producido un error"
                 })
             } else {
-                //let listaSinUser = ofertas.filter((oferta) => oferta.usuario !== gestorBD.mongo.ObjectID(req.session.usuario.id));
+                let listaSinUser = ofertas.filter((oferta) => oferta.usuario !== gestorBD.mongo.ObjectID(req.session.usuario.id));
                 res.status(200);
                 res.send( JSON.stringify(listaSinUser) );
             }
         });
     });
+
+    app.get("/api/mensaje/:id", function(req,res){
+        let criterio = {
+            "_id" : gestorBD.mongo.ObjectID(req.params.id),
+            idInteresado : req.session.usuario.id
+        };
+
+        gestorBD.obtenerMensajes(criterio, function(mensajes){
+            if(mensajes == null){
+
+            } else {
+                if(mensajes.length == 0){
+
+                } else {
+
+                }
+            }
+        })
+    })
 
     app.post("/api/autenticar", function(req,res){
         let seguro = app.get("crypto").createHmac('sha256', app.get('clave'))

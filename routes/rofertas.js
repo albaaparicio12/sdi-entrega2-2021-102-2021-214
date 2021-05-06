@@ -165,6 +165,83 @@ module.exports = function (app, swig, gestorBD) {
         });
     })
 
+    app.get("/oferta/mensajes",function(req,res){
+        let criterio = {vendedor : req.session.usuario};
+        let criterioAux = {interesado : req.session.usuario};
+
+        gestorBD.obtenerMensajes(criterio,function(mensajes){
+            if(mensajes == null){
+                res.send("error")
+            } else {
+                gestorBD.obtenerMensajes(criterioAux,function(mensajes2){
+                    if(mensajes2 == null){
+                        res.send("error");
+                    } else {
+                        //mensajes2.addAll(mensajes);
+                        let respuesta = swig.renderFile('views/listaMensajes.html',
+                            {
+                                identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
+                                usuario: req.session.usuario,
+                                mensajes: mensajes2
+                            });
+                        res.send(respuesta);
+                    }
+                })
+            }
+        })
+    })
+
+    app.get("/oferta/mensaje/:id",function(req,res){
+        let criterio = {oferta : gestorBD.mongo.ObjectID(req.params.id)};
+        let criterioAux = {"_id" : gestorBD.mongo.ObjectID(req.params.id)};
+
+        gestorBD.obtenerMensajes(criterio, function(mensajes){
+            if(mensajes == null){
+                res.send("Error");
+            } else {
+                gestorBD.obtenerOfertas(criterioAux,function(ofertas){
+                    if(ofertas == null){
+                        res.send("Error");
+                    } else {
+                        let respuesta = swig.renderFile('views/mensajeNuevo.html',
+                            {
+                                identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
+                                usuario: req.session.usuario,
+                                mensajes: mensajes,
+                                oferta: ofertas[0]
+                            });
+                        res.send(respuesta);
+                    }
+                })
+            }
+        });
+    });
+
+    app.post("/oferta/mensaje/:id",function(req,res){
+        let criterio = {"_id" : gestorBD.mongo.ObjectID(req.params.id)};
+
+        gestorBD.obtenerOfertas(criterio, function (ofertas) {
+            if (ofertas == null) {
+                res.redirect("/oferta/add?mensaje=Error al insertar la oferta &tipoMensaje=alert-danger");
+            } else {
+                let mensaje = {
+                    oferta: ofertas[0],
+                    vendedor: ofertas[0].usuario,
+                    interesado: req.session.usuario,
+                    mensaje: req.body.texto
+                }
+
+                gestorBD.insertarMensaje(mensaje,function(id){
+                    if(id == null){
+                        res.send("Error");
+                    } else {
+                        res.redirect("/oferta/mensajes");
+                    }
+                })
+            }
+        });
+    })
+
     app.get("/oferta/destacar/:id", function (req, res) {
         let criterio = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
 
