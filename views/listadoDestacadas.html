@@ -23,7 +23,7 @@
                 <th>{{ oferta.detalles }}</th>
                 <th>{{ oferta.fecha }}</th>
                 <th>{{ oferta.precio }}</th>
-                <th><a href="/oferta/{{ oferta._id.toString() }}">{{oferta.disponible}}</a></th>
+                <th><a href="/oferta/comprar/{{ oferta._id.toString() }}">{{oferta.disponible}}</a></th>
             </tr>
             </tbody>
             {% endfor %}

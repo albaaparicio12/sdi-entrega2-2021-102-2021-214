@@ -24,8 +24,8 @@
                 <th>{{ oferta.detalles }}</th>
                 <th>{{ oferta.fecha }}</th>
                 <th>{{ oferta.precio }}</th>
-                <th> <a href="/oferta/borrar/{{ oferta._id.toString() }}">Eliminar</a> </th>
-                <th> <a href="/oferta/destacar/{{ oferta._id.toString() }}">Destacar</a> </th>
+                <th> <a id="del{{oferta.titulo}}" href="/oferta/borrar/{{ oferta._id.toString() }}">Eliminar</a> </th>
+                <th> <a id="des{{oferta.titulo}}" href="/oferta/destacar/{{ oferta._id.toString() }}">Destacar</a> </th>
             </tr>
             </tbody>
             {% endfor %}

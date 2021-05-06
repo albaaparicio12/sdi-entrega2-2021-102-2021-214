@@ -1,26 +1,26 @@
 module.exports = function(app, swig, gestorBD) {
     app.get("/usuario/add", function(req, res) {
         let respuesta = swig.renderFile('views/bregistro.html',{
-            identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
+            identificado: (req.session.usuario !== undefined && req.session.usuario !== null)
         });
         res.send(respuesta);
     });
 
     app.post('/usuario/add', function(req, res) {
-        let contraseñaSegura = app.get('crypto').createHmac('sha256', app.get('clave'))
+        let contrasenaSegura = app.get('crypto').createHmac('sha256', app.get('clave'))
             .update(req.body.password).digest('hex');
-        let repContraseñaSegura = app.get('crypto').createHmac('sha256', app.get('clave'))
+        let repContrasenaSegura = app.get('crypto').createHmac('sha256', app.get('clave'))
             .update(req.body.repetirPassword).digest('hex');
         let usuario = {
             nombre : req.body.nombre,
             apellidos : req.body.apellidos,
             email : req.body.email,
-            password: contraseñaSegura,
-            repetirPassword : repContraseñaSegura,
+            password: contrasenaSegura,
+            repetirPassword : repContrasenaSegura,
             dinero : 100,
             rol : "estandar"
         }
-        if(req.body.password != req.body.repetirPassword){
+        if(req.body.password !== req.body.repetirPassword){
             res.redirect("/usuario/add?mensaje=Error con las passwords, no coinciden &tipoMensaje=alert-danger");
         }
         else {
@@ -35,7 +35,7 @@ module.exports = function(app, swig, gestorBD) {
                             req.session.usuario = usuario;
                             let respuesta = swig.renderFile('views/opciones.html',
                                 {
-                                    identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false,
+                                    identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
                                     usuario : usuario
                                 });
                             res.send(respuesta);
@@ -49,7 +49,7 @@ module.exports = function(app, swig, gestorBD) {
 
     app.get("/identificarse", function(req, res) {
         let respuesta = swig.renderFile('views/bidentificacion.html',{
-            identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
+            identificado: (req.session.usuario !== undefined && req.session.usuario !== null)
         });
         res.send(respuesta);
     });
@@ -62,7 +62,7 @@ module.exports = function(app, swig, gestorBD) {
             password : seguro
         }
         gestorBD.obtenerUsuarios(criterio, function(usuarios) {
-            if (usuarios == null || usuarios.length == 0) {
+            if (usuarios === null || usuarios.length === 0) {
                 req.session.usuario = null;
                 res.redirect("/identificarse" +
                     "?mensaje=Email o password incorrecto"+
@@ -70,15 +70,15 @@ module.exports = function(app, swig, gestorBD) {
             } else {
                 req.session.usuario = usuarios[0];
                 let respuesta;
-                if(req.session.usuario.email == "admin@email.com"){
+                if(req.session.usuario.email === "admin@email.com"){
                     respuesta = swig.renderFile('views/opcionesAdmin.html',{
                         usuario : req.session.usuario,
-                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
+                        identificado: true
                     });
                 } else {
                     respuesta =swig.renderFile('views/opciones.html',{
                         usuario : req.session.usuario,
-                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
+                        identificado: true
                     });
                 }
                 res.send(respuesta);
@@ -102,7 +102,7 @@ module.exports = function(app, swig, gestorBD) {
                     {
                         listado : listaSinAdmin,
                         usuario : req.session.usuario,
-                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
+                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null)
                     });
                 res.send(respuesta);
             }
@@ -122,7 +122,7 @@ module.exports = function(app, swig, gestorBD) {
             }
             let respuesta = swig.renderFile('views/opcionesAdmin.html',{
                 usuario : req.session.usuario,
-                identificado: (req.session.usuario !== undefined && req.session.usuario !== null)? true : false
+                identificado: (req.session.usuario !== undefined && req.session.usuario !== null)
             });
             res.send(respuesta);
         }
@@ -133,7 +133,7 @@ module.exports = function(app, swig, gestorBD) {
 
     function usuarioYaRegistrado(usuario, functionCallback){
         gestorBD.obtenerUsuarios(usuario,function(usuarios){
-            if(usuarios == null || usuarios.length == 0){
+            if(usuarios === null || usuarios.length === 0){
                 functionCallback(false);
             } else {
                 functionCallback(true);
