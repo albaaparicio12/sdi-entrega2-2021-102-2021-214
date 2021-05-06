@@ -40,10 +40,9 @@ module.exports = function (app, swig, gestorBD) {
         let criterio = {$and: [{"_id": gestorBD.mongo.ObjectID(req.params.id)}, {"disponible": "Comprar"}]};
         let criterioU = {"usuario": req.session.usuario.email};
         gestorBD.eliminarOferta(criterio, function (result) {
-            if (result == false) {
+            if (result === false) {
                 res.redirect("/oferta/borrar?mensaje=Error al borrar la oferta. &tipoMensaje=alert-danger");
-            }
-            else {
+            } else {
                 gestorBD.obtenerOfertas(criterioU, function (lista) {
                     if (lista == null) {
                         res.send("Error al listar ofertas");
@@ -100,7 +99,7 @@ module.exports = function (app, swig, gestorBD) {
     app.get("/oferta/tienda", function (req, res) {
         let criterio = {};
         if (req.query.busqueda != null) {
-            criterio = {"titulo": new RegExp(req.query.busqueda,'i')};
+            criterio = {"titulo": new RegExp(req.query.busqueda, 'i')};
         }
 
         let pg = parseInt(req.query.pg);
@@ -264,11 +263,10 @@ module.exports = function (app, swig, gestorBD) {
         if (lista[0].disponible === "Vendido") {
             res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
                 "ya está vendida &tipoMensaje=alert-danger");
-        }
-        else if (String(lista[0].usuario) === String(req.session.usuario.email) ) {
+        } else if (String(lista[0].usuario) === String(req.session.usuario.email)) {
             res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
                 "es tu oferta &tipoMensaje=alert-danger");
-        }else if (lista[0].precio <= req.session.usuario.dinero) {
+        } else if (lista[0].precio <= req.session.usuario.dinero) {
             let oferta = {
                 usuario: lista[0].usuario,
                 titulo: lista[0].titulo,
@@ -283,9 +281,9 @@ module.exports = function (app, swig, gestorBD) {
                 if (result == null) {
                     res.send("Error al modificar la oferta");
                 } else {
-                    let criterio_usuario={"_id": gestorBD.mongo.ObjectID(req.session.usuario._id)};
+                    let criterio_usuario = {"_id": gestorBD.mongo.ObjectID(req.session.usuario._id)};
                     let nuevoDinero = {dinero: req.session.usuario.dinero - lista[0].precio};
-                    modificarSaldoUser(criterio_usuario, nuevoDinero , req, res);
+                    modificarSaldoUser(criterio_usuario, nuevoDinero, req, res);
                 }
             })
         } else {
@@ -300,23 +298,22 @@ module.exports = function (app, swig, gestorBD) {
             let dinero = {"dinero": usuario.dinero - 20};
             modificarSaldoUser(criterio, dinero, req, res);
         } else {
-            res.redirect("/oferta/add&mensaje=Error - No tienes suficiente dinero!&tipoMensaje=alert-danger");
+            res.redirect("/oferta/add?mensaje=Error - No tienes suficiente dinero!&tipoMensaje=alert-danger");
         }
     }
 
     function destacarOferta(oferta, criterio, req, res) {
         oferta.destacada = "true";
+        let usuario = req.session.usuario;
+        if (usuario.dinero < 20) {
+            res.redirect("/oferta/listado?mensaje=Error - No tienes suficiente dinero!&tipoMensaje=alert-danger");
+        }
         gestorBD.modificarOferta(criterio, oferta, function (resultado) {
             if (resultado == null) {
                 res.send("Error al listar ofertas");
             } else {
-                let criterioAux = {"_id": gestorBD.mongo.ObjectID(req.session.usuario._id)}
-                let usuario = req.session.usuario;
-                if (usuario.dinero < 20) {
-                    res.redirect("/oferta/listado?mensaje=Error - No tienes dinero suficiente!&tipoMensaje=alert-danger");
-                } else {
-                    modificarSaldoUser(criterioAux, {"dinero": usuario.dinero - 20}, req, res);
-                }
+                let criterioAux = {"_id": gestorBD.mongo.ObjectID(req.session.usuario._id)};
+                modificarSaldoUser(criterioAux, {"dinero": usuario.dinero - 20}, req, res);
             }
         });
     }
