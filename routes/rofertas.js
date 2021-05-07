@@ -228,7 +228,8 @@ module.exports = function (app, swig, gestorBD) {
                     oferta: ofertas[0],
                     vendedor: ofertas[0].usuario,
                     interesado: req.session.usuario,
-                    mensaje: req.body.texto
+                    mensaje: req.body.texto,
+                    leido : false
                 }
 
                 gestorBD.insertarMensaje(mensaje,function(id){

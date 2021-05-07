@@ -8,7 +8,7 @@ module.exports = function(app, gestorBD) {
                     error : "se ha producido un error"
                 })
             } else {
-                let listaSinUser = ofertas.filter((oferta) => oferta.usuario !== gestorBD.mongo.ObjectID(req.session.usuario.id));
+                let listaSinUser = ofertas.filter((oferta) => oferta.usuario !== req.session.usuario);
                 res.status(200);
                 res.send( JSON.stringify(listaSinUser) );
             }
@@ -35,10 +35,11 @@ module.exports = function(app, gestorBD) {
                             })
                         } else {
                             let mensaje = {
-                                interesado : req.session.usuario,
+                                interesado : req.body.usuario,
                                 vendedor : ofertas[0].usuario,
                                 mensaje : req.body.mensaje,
-                                oferta : gestorBD.mongo.ObjectID(req.params.id)
+                                oferta : gestorBD.mongo.ObjectID(req.params.id),
+                                leido : false
                             }
                             gestorBD.insertarMensaje(mensaje, function(id){
                                 if(id == null){
@@ -57,8 +58,74 @@ module.exports = function(app, gestorBD) {
         })
     })
 
+    app.get("/api/mensaje/:id", function(req,res){
+        let criterio = {
+            "oferta" : gestorBD.mongo.ObjectID(req.params.id),
+            "interesado" : req.body.interesado
+        };
+
+        gestorBD.obtenerMensajes(criterio, function(mensajes){
+            if(mensajes == null){
+                res.status(500);
+                res.json({
+                    error : "se ha producido un error"
+                })
+            } else {
+                res.status(200);
+                res.send( JSON.stringify(mensajes) );
+            }
+        })
+    })
+
+    app.get("/api/mensaje/leido/:id", function(req,res){
+        let criterio = {
+            "_id" : gestorBD.mongo.ObjectID(req.params.id)
+        };
+
+        gestorBD.obtenerMensajes(criterio, function(mensajes){
+            if(mensajes == null){
+                res.status(500);
+                res.json({
+                    error : "se ha producido un error"
+                })
+            } else {
+                let mensaje = mensajes[0];
+                mensaje.leido = true;
+                gestorBD.modificarMensaje(criterio,mensaje, function(msg){
+                    if(mensajes == null){
+                        res.status(500);
+                        res.json({
+                            error : "se ha producido un error"
+                        })
+                    } else {
+                        res.status(200);
+                        res.send( JSON.stringify(msg) );
+                    }
+                })
+            }
+        })
+    })
+
+    app.delete("/api/mensaje/:id", function(req,res){
+        let criterio = {
+            "oferta" : gestorBD.mongo.ObjectID(req.params.id)
+        };
+
+        gestorBD.eliminarMensaje(criterio, function(result){
+            if(result == null){
+                res.status(500);
+                res.json({
+                    error : "se ha producido un error"
+                })
+            } else {
+                res.status(201);
+                res.send( "Conversación eliminada" );
+            }
+        })
+    })
+
     app.post("/api/autenticar/", function(req,res){
-        let seguro = app.get('crypto').createHmac('sha256', app.get('clave'))
+        let seguro = app.get("crypto").createHmac('sha256', app.get('clave'))
             .update(req.body.password).digest('hex');
         let criterio = {
             email : req.body.email,
