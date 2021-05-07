@@ -64,7 +64,7 @@ routerUsuarioToken.use(function(req, res, next) {
     }
 });
 // Aplicar routerUsuarioToken
-app.use('/api/cancion', routerUsuarioToken);
+app.use('/api/autenticar', routerUsuarioToken);
 
 // routerUsuarioSession
 var routerUsuarioSession = express.Router();
