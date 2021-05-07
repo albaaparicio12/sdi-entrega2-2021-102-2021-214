@@ -1,0 +1,51 @@
+<div id="widget-mensaje" >
+    <button class="btn" onclick="cargarMensajes()" >Actualizar</button>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>Titulo</th>
+            <th>Vendedor</th>
+            <th>Precio</th>
+            <th>Detalles</th>
+        </tr>
+        </thead>
+        <tbody id="tablaCuerpo">
+
+        </tbody>
+    </table>
+</div>
+
+<script>
+    var ofertas;
+    function cargarMensajes(){
+        $.ajax({
+            url: URLbase + "/oferta",
+            type: "GET",
+            data: { },
+            dataType: 'json',
+            headers: { "token": token },
+            success: function(respuesta) {
+                ofertas = respuesta;
+                actualizarTabla(ofertas);
+            },
+            error : function (error){
+                $( "#contenedor-principal" ).load("widget-identificacion.html");
+            }
+        });
+    }
+    function actualizarTabla(ofertasMostrar){
+        $( "#tablaCuerpo" ).empty(); // Vaciar la tabla
+        for (i = 0; i < ofertasMostrar.length; i++) {
+            $( "#tablaCuerpo" ).append(
+                "<tr id="+ofertasMostrar[i]._id+">"+
+                "<td>"+ofertasMostrar[i].titulo+"</td>" +
+                "<td>"+ofertasMostrar[i].vendedor+"</td>" +
+                "<td>"+ofertasMostrar[i].precio+"</td>" +
+                "<td>"+ofertasMostrar[i].detalles+"</td>" +
+                "</tr>" );
+        }
+    }
+    cargarMensajes();
+</script>
+
+}

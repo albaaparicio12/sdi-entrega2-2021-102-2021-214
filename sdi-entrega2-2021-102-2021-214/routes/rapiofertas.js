@@ -15,49 +15,42 @@ module.exports = function(app, gestorBD) {
         });
     });
 
+    //Este método  crea un mensaje para la oferta X
     app.post("/api/mensaje/:id", function(req,res){
         let criterio = {
             "_id" : gestorBD.mongo.ObjectID(req.params.id)
         };
 
-        gestorBD.obtenerMensajes(criterio, function(mensajes){
-            if(mensajes == null){
+        gestorBD.obtenerOfertas(criterio, function(ofertas){
+            if(ofertas == null) {
                 res.status(500);
                 res.json({
                     error : "se ha producido un error"
                 })
             } else {
-                    gestorBD.obtenerOfertas(criterio, function(ofertas){
-                        if(ofertas == null) {
-                            res.status(500);
-                            res.json({
-                                error : "se ha producido un error"
-                            })
-                        } else {
-                            let mensaje = {
-                                interesado : req.body.usuario,
-                                vendedor : ofertas[0].usuario,
-                                mensaje : req.body.mensaje,
-                                oferta : gestorBD.mongo.ObjectID(req.params.id),
-                                leido : false
-                            }
-                            gestorBD.insertarMensaje(mensaje, function(id){
-                                if(id == null){
-                                    res.status(500);
-                                    res.json({
-                                        error : "se ha producido un error"
-                                    })
-                                } else {
-                                    res.status(200);
-                                    res.send( JSON.stringify(mensaje) );
-                                }
-                            })
-                        }
-                    })
+                let mensaje = {
+                    interesado : req.body.usuario,
+                    vendedor : ofertas[0].usuario,
+                    mensaje : req.body.mensaje,
+                    oferta : gestorBD.mongo.ObjectID(req.params.id),
+                    leido : false
+                }
+                gestorBD.insertarMensaje(mensaje, function(id){
+                    if(id == null){
+                        res.status(500);
+                        res.json({
+                            error : "se ha producido un error"
+                        })
+                    } else {
+                        res.status(200);
+                        res.send( JSON.stringify(mensaje) );
+                    }
+                })
             }
-        })
-    })
+        });
+    });
 
+    //Este método saca todos los mensajes de una oferta en las que el interesado sea X
     app.get("/api/mensaje/:id", function(req,res){
         let criterio = {
             "oferta" : gestorBD.mongo.ObjectID(req.params.id),
@@ -77,6 +70,7 @@ module.exports = function(app, gestorBD) {
         })
     })
 
+    //Este método marca como leido un mensaje
     app.get("/api/mensaje/leido/:id", function(req,res){
         let criterio = {
             "_id" : gestorBD.mongo.ObjectID(req.params.id)
@@ -106,6 +100,7 @@ module.exports = function(app, gestorBD) {
         })
     })
 
+    //Este método borra todos los mensajes de una oferta
     app.delete("/api/mensaje/:id", function(req,res){
         let criterio = {
             "oferta" : gestorBD.mongo.ObjectID(req.params.id)
