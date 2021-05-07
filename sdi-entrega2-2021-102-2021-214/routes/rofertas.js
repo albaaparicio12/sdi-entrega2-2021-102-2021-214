@@ -261,36 +261,43 @@ module.exports = function (app, swig, gestorBD) {
     });
 
     function comprarOferta(lista, criterio, req, res) {
-        if (lista[0].disponible === "Vendido") {
-            res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
-                "ya está vendida &tipoMensaje=alert-danger");
-        } else if (String(lista[0].usuario) === String(req.session.usuario.email)) {
-            res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
-                "es tu oferta &tipoMensaje=alert-danger");
-        } else if (lista[0].precio <= req.session.usuario.dinero) {
-            let oferta = {
-                usuario: lista[0].usuario,
-                titulo: lista[0].titulo,
-                detalles: lista[0].detalles,
-                fecha: lista[0].fecha,
-                precio: lista[0].precio,
-                disponible: "Vendido",
-                comprador: req.session.usuario.email,
-                destacada: lista[0].destacada
-            }
-            gestorBD.modificarOferta(criterio, oferta, function (result) {
-                if (result == null) {
-                    res.send("Error al modificar la oferta");
+        let criterioUsu = {"_id" : gestorBD.mongo.ObjectID(req.session.usuario._id)};
+        gestorBD.obtenerUsuarios(criterioUsu, function(usuarios){
+            if(usuarios == null){
+                res.send("Error");
+            } else {
+                if (lista[0].disponible === "Vendido") {
+                    res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
+                        "ya está vendida &tipoMensaje=alert-danger");
+                } else if (String(lista[0].usuario) === String(usuarios[0].email)) {
+                    res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
+                        "es tu oferta &tipoMensaje=alert-danger");
+                } else if (lista[0].precio <= usuarios[0].dinero) {
+                    let oferta = {
+                        usuario: lista[0].usuario,
+                        titulo: lista[0].titulo,
+                        detalles: lista[0].detalles,
+                        fecha: lista[0].fecha,
+                        precio: lista[0].precio,
+                        disponible: "Vendido",
+                        comprador: usuarios[0].email,
+                        destacada: lista[0].destacada
+                    }
+                    gestorBD.modificarOferta(criterio, oferta, function (result) {
+                        if (result == null) {
+                            res.send("Error al modificar la oferta");
+                        } else {
+                            let criterio_usuario = {"_id": gestorBD.mongo.ObjectID(usuarios[0]._id)};
+                            let nuevoDinero = {dinero: usuarios[0].dinero - lista[0].precio};
+                            modificarSaldoUser(criterio_usuario, nuevoDinero, req, res);
+                        }
+                    })
                 } else {
-                    let criterio_usuario = {"_id": gestorBD.mongo.ObjectID(req.session.usuario._id)};
-                    let nuevoDinero = {dinero: req.session.usuario.dinero - lista[0].precio};
-                    modificarSaldoUser(criterio_usuario, nuevoDinero, req, res);
+                    res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
+                        "no tienes suficiente dinero &tipoMensaje=alert-danger");
                 }
-            })
-        } else {
-            res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
-                "no tienes suficiente dinero &tipoMensaje=alert-danger");
-        }
+            }
+        })
     }
 
     function nuevaOfertaDestacada(criterio, req, res) {
