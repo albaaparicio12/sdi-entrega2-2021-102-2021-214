@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block titulo %} Listado de Ofertas {% endblock %}
+
+{% block contenido_principal %}
+
+<div class="row">
+    <div id="custom-search-input ">
+        <form method="get" action="/oferta/tienda" >
+            <div
+                    class="input-group col-xs-8 col-sm-6 col-md-4 col-lg-5 pull-right">
+                <input id="searchBar" type="text" class="search-query form-control"
+                       placeholder="Nombre de la oferta" name="busqueda"/>
+                <span class="input-group-btn">
+    <button id="searchButton" class="btn" type="submit">
+        <span class="glyphicon glyphicon-search"></span>
+    </button>
+</span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<h2>Ofertas</h2>
+<div id="offersList" class="container">
+    {% for oferta in ofertas %}
+    <div class="row" >
+        <div class="col-lg-12" >
+            <div class="col-lg-6" >
+                <h3>{{ oferta.titulo }}</h3>
+                <p>{{ oferta.detalles }}</p>
+            </div>
+            <div class="col-lg-4" >
+                <div class="text-right">
+                    <h4>{{ oferta.precio }} €</h4>
+                    <h5><a href="/oferta/comprar/{{ oferta._id.toString() }}">{{oferta.disponible}}</a></h5>
+                    <h5><a href="/oferta/mensaje/{{ oferta._id.toString() }}">Mandar mensaje</a></h5>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    <!-- Fin del Bloque canción -->
+</div>
+
+<!-- Paginación mostrar la actual y 2 anteriores y dos siguientes -->
+<div class="row text-center">
+    <ul class="pagination">
+        {% for pagina in paginas %}
+        <li class="page-item" id="pi-{{pagina}}">
+            <a class=page-link" href="/oferta/tienda?pg={{pagina}}">{{pagina}}</a>
+        </li>
+        {% endfor %}
+        <script>
+            $("#pi-" + "{{actual}}").addClass("active");
+        </script>
+    </ul>
+</div>
+
+{% endblock %}
