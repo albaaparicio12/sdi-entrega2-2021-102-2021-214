@@ -171,6 +171,66 @@ module.exports = function (app, gestorBD) {
         })
     });
 
+    app.delete("/api/conversacion/:id", function (req, res) {
+        let criterio = {
+            "_id": gestorBD.mongo.ObjectID(req.params.id)
+        };
+        gestorBD.obtenerConversacion(criterio, function(conversaciones){
+            if (conversaciones == null) {
+                res.status(500);
+                res.json({
+                    error: "se ha producido un error"
+                })
+            } else {
+                let criterio = {
+                    "conversacion" : conversaciones[0]._id
+                }
+                gestorBD.eliminarMensajes(criterio, function (mensajes) {
+                    if (mensajes == null) {
+                        res.status(500);
+                        res.json({
+                            error: "se ha producido un error"
+                        })
+                    } else {
+                        gestorBD.eliminarConversacion(criterio, function (result) {
+                            if (result == null) {
+                                res.status(500);
+                                res.json({
+                                    error: "se ha producido un error"
+                                })
+                            } else {
+                                res.status(201);
+                                res.send("Conversación eliminada");
+                            }
+                        })
+                    }
+                })
+            }
+        })
+    });
+
+    app.get("/api/conversaciones", function (req, res) {
+        let criterio = {interesado: req.session.usuario};
+        let criterioAux = {vendedor: req.session.usuario};
+
+        gestorBD.obtenerConversacion(criterio, function (conversaciones) {
+            if (conversaciones == null) {
+                res.send("Error");
+            } else {
+                gestorBD.obtenerConversacion(criterioAux, function (conversacionesAux) {
+                    if (conversacionesAux == null) {
+                        res.send("Error");
+                    } else {
+                        //aqui se unirían las listas conversaciones y conversacionesAux
+                        let totalConversaciones = conversacionesAux + conversaciones;
+                        res.status(200);
+                        res.send(JSON.stringify(totalConversaciones));
+                    }
+                })
+            }
+        });
+    });
+
     function nuevaConversacion(criterio, mensaje, req, res) {
         let criterioOfertaAChatear = {"_id": criterio.oferta};
         gestorBD.obtenerOfertas(criterioOfertaAChatear, function (ofertas) {

@@ -1,6 +1,6 @@
 <html lang="en">
 <head>
-    <title>jQuery uoMusic </title>
+    <title>WallaPop</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
@@ -21,8 +21,11 @@
             </button>
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
-            <ul class="nav navbar-nav" id="barra-menu">
+            <ul class="nav navbar-nav" id="barra-menu1">
                 <li><a onclick=widgetOfertas()>Ofertas</a></li>
+            </ul>
+            <ul class="nav navbar-nav" id="barra-menu2">
+                <li><a onclick=widgetConversaciones()>Conversaciones</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right" id="barra-menu-derecha">
                 <!-- Opciones de menú aqui -->
@@ -49,6 +52,9 @@
 
     function widgetOfertas(){
         $( "#contenedor-principal" ).load( "widget-oferta.html");
+    }
+    function widgetConversaciones(){
+        $( "#contenedor-principal" ).load( "widget-conversaciones.html");
     }
 </script>
 

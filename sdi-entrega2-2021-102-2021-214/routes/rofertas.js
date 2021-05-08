@@ -216,6 +216,32 @@ module.exports = function (app, swig, gestorBD) {
         });
     });
 
+    app.get("/oferta/conversaciones", function (req, res) {
+        let criterio = {interesado: req.session.usuario};
+        let criterioAux = {vendedor: req.session.usuario};
+
+        gestorBD.obtenerConversacion(criterio, function (conversaciones) {
+            if (conversaciones == null) {
+                res.send("Error");
+            } else {
+                gestorBD.obtenerConversacion(criterioAux, function (conversacionesAux) {
+                    if (conversacionesAux == null) {
+                        res.send("Error");
+                    } else {
+                        let respuesta = swig.renderFile('views/conversaciones.html',
+                            {
+                                identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
+                                usuario: req.session.usuario,
+                                conversacionesInt: conversaciones,
+                                conversacionesVen: conversacionesAux
+                            });
+                        res.send(respuesta);
+                    }
+                })
+            }
+        });
+    });
+
     app.post("/oferta/mensaje/:id", function (req, res) {
         let criterio = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
 

@@ -1,0 +1,57 @@
+<div id="widget-conversacion" >
+    <button class="btn" onclick="cargarConversaciones()" >Actualizar</button>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                Wallapop Chat
+            </tr>
+        </thead>
+        <tbody id="tablaCuerpo">
+        </tbody>
+    </table>
+</div>
+
+<script>
+    var conversaciones;
+    function cargarConversaciones(){
+        $.ajax({
+            url: URLbase + "/conversaciones/"+ idUsuario,
+            type: "GET",
+            data: { },
+            dataType: 'json',
+            headers: { "token": token },
+            success: function(respuesta) {
+                conversaciones = respuesta;
+                actualizarTabla(conversaciones);
+            },
+            error : function (error){
+                $( "#contenedor-principal" ).load("widget-identificacion.html");
+            }
+        });
+    }
+    function actualizarTabla(converMostrar){
+        $( "#tablaCuerpo" ).empty(); // Vaciar la tabla
+        for (i = 0; i < converMostrar.length; i++) {
+            $( "#tablaCuerpo" ).append(
+                "<tr id="+converMostrar[i]._id+">"+
+                "<td>("+converMostrar[i].interesado+")</td>" +
+                "<td> "+converMostrar[i].vendedor+":</td>" +
+                "<a onClick='eliminarConversacion("+converMostrar[i]._id+")'>Eliminar</a>" +
+                "</tr>" );
+        }
+    }
+    function eliminarConversacion(id){
+        $.ajax({
+            url: URLbase + "/conversacion/" +id,
+            type: "DELETE",
+            dataType : 'json',
+            success : function(respuesta){
+                $( "#contenedor-principal" ).load("widget-conversaciones.html");
+            },
+            error : function(error){
+                $("#widget-identificacion")
+                    .prepend("<div class='alert alert-danger'>Usuario no identificado</div>");
+            }
+        });
+    }
+</script>
