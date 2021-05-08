@@ -18,22 +18,22 @@ module.exports = function (app, swig, gestorBD) {
             comprador: null,
             destacada: req.body.boxDestacada
         }
-        if (oferta.precio <= 0)
+        if (oferta.precio <= 0) {
             res.redirect("/oferta/add?mensaje=El precio de la oferta debe ser mayor que 0. &tipoMensaje=alert-danger");
-        gestorBD.insertarOferta(oferta, function (id) {
-            if (id == null) {
-                res.redirect("/oferta/add?mensaje=Error al insertar la oferta &tipoMensaje=alert-danger");
-            } else {
-                if (oferta.destacada === "true") {
-                    let criterio = {"_id": gestorBD.mongo.ObjectID(req.session.usuario._id)};
-                    nuevaOfertaDestacada(criterio, req, res);
+        } else {
+            gestorBD.insertarOferta(oferta, function (id) {
+                if (id == null) {
+                    res.redirect("/oferta/add?mensaje=Error al insertar la oferta &tipoMensaje=alert-danger");
                 } else {
-                    res.redirect("/oferta/listado");
+                    if (oferta.destacada === "true") {
+                        let criterio = {"_id": gestorBD.mongo.ObjectID(req.session.usuario._id)};
+                        nuevaOfertaDestacada(criterio, req, res);
+                    } else {
+                        res.redirect("/oferta/listado");
+                    }
                 }
-
-            }
-        });
-
+            });
+        }
     });
 
     app.get("/oferta/borrar/:id", function (req, res) {
@@ -264,7 +264,7 @@ module.exports = function (app, swig, gestorBD) {
         if (lista[0].disponible === "Vendido") {
             res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
                 "ya está vendida &tipoMensaje=alert-danger");
-        } else if (String(lista[0].usuario) === String(req.session.usuario.email) ){
+        } else if (String(lista[0].usuario) === String(req.session.usuario.email)) {
             res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
                 "es tu oferta &tipoMensaje=alert-danger");
         } else if (lista[0].precio <= req.session.usuario.dinero) {
@@ -325,10 +325,10 @@ module.exports = function (app, swig, gestorBD) {
             if (id == null) {
                 res.send("Error al insertar la oferta y restar el dinero");
             } else {
-                gestorBD.obtenerUsuarios(criterio, function(usuarios){
+                gestorBD.obtenerUsuarios(criterio, function (usuarios) {
                     if (usuarios == null || usuarios.length == 0) {
                         res.send("Error al actualizar el saldo del usuario.");
-                    } else{
+                    } else {
                         req.session.usuario = usuarios[0];
                         res.redirect("/oferta/tienda");
                     }
