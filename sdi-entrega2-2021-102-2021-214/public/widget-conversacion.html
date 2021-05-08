@@ -63,9 +63,7 @@
             },
             dataType : 'json',
             success : function(respuesta){
-                console.log(respuesta.token);
-                token = respuesta.token;
-                $("#contenedor-principal").load("widget-conversacion.html");
+                actualizarTabla(respuesta);
             },
             error : function(error){
                 $("#widget-identificacion")

@@ -95,15 +95,29 @@ module.exports = function (app, gestorBD) {
             "interesado": req.session.usuario
         };
 
-        gestorBD.obtenerConversacion(criterio, function (mensajes) {
-            if (mensajes == null) {
+        gestorBD.obtenerConversacion(criterio, function (conversaciones) {
+            if (conversaciones == null) {
                 res.status(500);
                 res.json({
                     error: "se ha producido un error"
                 })
-            } else {
+            } else if(conversaciones.length == 0){
                 res.status(200);
-                res.send(JSON.stringify(mensajes));
+                res.send(JSON.stringify(new Array())); //Le pasamos una conversación vacía.
+            }
+            else {
+                let criterioMensajes = {"conversacion": gestorBD.mongo.ObjectID(conversaciones[0]._id)};
+                gestorBD.obtenerMensajes(criterioMensajes, function (mensajes) {
+                    if (mensajes == null) {
+                        res.status(500);
+                        res.json({
+                            error: "se ha producido un error"
+                        })
+                    } else {
+                        res.status(200);
+                        res.send(JSON.stringify(mensajes));
+                    }
+                });
             }
         })
     })
@@ -157,7 +171,7 @@ module.exports = function (app, gestorBD) {
         })
     });
 
-    function nuevaConversacion(criterio,mensaje, req, res) {
+    function nuevaConversacion(criterio, mensaje, req, res) {
         let criterioOfertaAChatear = {"_id": criterio.oferta};
         gestorBD.obtenerOfertas(criterioOfertaAChatear, function (ofertas) {
             if (ofertas == null) {
