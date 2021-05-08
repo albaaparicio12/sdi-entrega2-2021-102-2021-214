@@ -2,6 +2,12 @@
 let express = require('express');
 let app = express();
 
+let fs = require('fs');
+let https = require('https');
+
+var rest = require('request');
+app.set('rest',rest);
+
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Credentials", "true");
@@ -116,6 +122,9 @@ require("./routes/rusuarios.js")(app, swig, gestorBD); // (app, param1, param2, 
 require("./routes/rofertas.js")(app, swig, gestorBD);
 require("./routes/rapiofertas.js")(app, gestorBD);
 
-app.listen(app.get('port'), function() {
-    console.log('Servidor activo');
-});
+https.createServer({
+    key: fs.readFileSync('certificates/alice.key'),
+    cert: fs.readFileSync('certificates/alice.crt')
+    }, app).listen(app.get('port'), function() {
+        console.log("Servidor activo");
+    });

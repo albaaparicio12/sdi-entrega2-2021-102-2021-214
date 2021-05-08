@@ -3,7 +3,7 @@
 {% block titulo %} Mensaje nuevo {% endblock %}
 
 {% block contenido_principal %}
-<h2 id="titleLogIn">Nuevo mensaje</h2>
+<h2 class="display-5 mt-3" id="titleLogIn">Nuevo mensaje</h2>
 <form class="form-horizontal" method="post" action="/oferta/mensaje/{{oferta._id.toString()}}" >
     {% for mensaje in mensajes %}
     <div>

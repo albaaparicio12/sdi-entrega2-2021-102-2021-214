@@ -1,5 +1,5 @@
-<div id="widget-mensaje" >
-    <button class="btn" onclick="cargarMensajes()" >Actualizar</button>
+<div id="widget-oferta" >
+    <button class="btn" onclick="cargarOfertas()" >Actualizar</button>
     <table class="table table-hover">
         <thead>
         <tr>
@@ -17,9 +17,9 @@
 
 <script>
     var ofertas;
-    function cargarMensajes(){
+    function cargarOfertas(){
         $.ajax({
-            url: URLbase + "/oferta",
+            url: URLbase + "/ofertas" ,
             type: "GET",
             data: { },
             dataType: 'json',
@@ -39,13 +39,12 @@
             $( "#tablaCuerpo" ).append(
                 "<tr id="+ofertasMostrar[i]._id+">"+
                 "<td>"+ofertasMostrar[i].titulo+"</td>" +
-                "<td>"+ofertasMostrar[i].vendedor+"</td>" +
+                "<td>"+ofertasMostrar[i].usuario+"</td>" +
                 "<td>"+ofertasMostrar[i].precio+"</td>" +
                 "<td>"+ofertasMostrar[i].detalles+"</td>" +
                 "</tr>" );
         }
     }
-    cargarMensajes();
+    cargarOfertas();
 </script>
 
-}

@@ -1,4 +1,4 @@
-<div id="widget-login">
+<div id="widget-identificacion">
     <div class="form-group">
         <label class="control-label col-sm-2" for="email">Email:</label>
         <div class="col-sm-10">
@@ -22,23 +22,27 @@
 
 <script>
 
-    $("#boton-login").click(function(){
+    $("#boton-login").click(function (){
         $.ajax({
-            url: URLbase + "/autenticar/",
+            url: URLbase + "/autenticar",
             type: "POST",
             data: {
-                email : $("#email").val()
+                email: $("#email").val(),
+                password : $("#password").val()
             },
-            dataType : 'json',
-            success : function(respuesta){
-                console.log(respuesta.token);
+            dataType:'json',
+            success: function(respuesta) {
+                console.log(respuesta.token); // <- Prueba
                 token = respuesta.token;
-                $("#contenedor-principal").load("widget-mensaje.html");
+                Cookies.set('token', respuesta.token);
+                $( "#contenedor-principal" ).load( "widget-oferta.html");
             },
-            error : function(error){
-                $("#widget-identificacion")
-                .prepend("<div class='alert alert-danger'>Usuario no identificado</div>");
+            error : function (error){
+                Cookies.remove('token');
+                $("#widget-login" )
+                    .prepend("<div class='alert alert-danger'>Usuario no encontrado</div>");
             }
+
         });
     });
 
