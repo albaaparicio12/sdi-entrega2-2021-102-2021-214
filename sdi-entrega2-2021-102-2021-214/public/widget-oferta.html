@@ -7,6 +7,7 @@
             <th>Vendedor</th>
             <th>Precio</th>
             <th>Detalles</th>
+            <th></th>
         </tr>
         </thead>
         <tbody id="tablaCuerpo">
@@ -42,10 +43,14 @@
                 "<td>"+ofertasMostrar[i].usuario+"</td>" +
                 "<td>"+ofertasMostrar[i].precio+"</td>" +
                 "<td>"+ofertasMostrar[i].detalles+"</td>" +
+                "<td><a onclick=widgetConversacion('"+ofertasMostrar[i]._id+"')> Enviar mensaje</a></td>" +
                 "</tr>" );
         }
     }
-
+    function widgetConversacion(_id){
+        idOfertaConversacion = _id;
+        $( "#contenedor-principal" ).load( "widget-conversacion.html");
+    }
     cargarOfertas();
 </script>
 

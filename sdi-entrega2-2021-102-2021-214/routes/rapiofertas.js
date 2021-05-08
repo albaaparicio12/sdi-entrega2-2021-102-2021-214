@@ -44,26 +44,34 @@ module.exports = function (app, gestorBD) {
 
     });
 
-
-    //Este método  crea un mensaje para la oferta X
-    app.post("/api/mensaje/:id", function (req, res) {
+    //Este método  crea un mensaje para la oferta X. Si no hay ninguna conversacion previa crea una
+    app.post("/api/mensajes/:id/nuevo", function (req, res) {
+        let mensaje = {
+            "mensaje": req.body.mensaje,
+            "leido": false,
+            "fecha": new Date(Date.now()).toTimeString(),
+            "emisor": req.session.usuario
+        }
         let criterio = {
-            "_id": gestorBD.mongo.ObjectID(req.params.id)
+            "oferta": gestorBD.mongo.ObjectID(req.params.id),
+            "interesado": req.session.usuario
         };
 
-        gestorBD.obtenerOfertas(criterio, function (ofertas) {
-            if (ofertas == null) {
+        gestorBD.obtenerConversacion(criterio, function (conversaciones) {
+            if (conversaciones == null) {
                 res.status(500);
                 res.json({
                     error: "se ha producido un error"
                 })
+            } else if (conversaciones.length == 0) {
+                nuevaConversacion(criterio, mensaje, req, res);
             } else {
                 let mensaje = {
-                    interesado: req.body.usuario,
-                    vendedor: ofertas[0].usuario,
-                    mensaje: req.body.mensaje,
-                    oferta: gestorBD.mongo.ObjectID(req.params.id),
-                    leido: false
+                    "mensaje": req.body.mensaje,
+                    "leido": false,
+                    "fecha": new Date(Date.now()).toTimeString(),
+                    "emisor": req.session.usuario,
+                    "conversacion": gestorBD.mongo.ObjectID(conversaciones[0]._id)
                 }
                 gestorBD.insertarMensaje(mensaje, function (id) {
                     if (id == null) {
@@ -80,14 +88,14 @@ module.exports = function (app, gestorBD) {
         });
     });
 
-    //Este método saca todos los mensajes de una oferta en las que el interesado sea X
-    app.get("/api/mensaje/:id", function (req, res) {
+    //Este método saca todos los mensajes de una oferta en las que el interesado sea el usuario en sesion.
+    app.get("/api/mensajes/:id", function (req, res) {
         let criterio = {
             "oferta": gestorBD.mongo.ObjectID(req.params.id),
-            "interesado": req.body.interesado
+            "interesado": req.session.usuario
         };
 
-        gestorBD.obtenerMensajes(criterio, function (mensajes) {
+        gestorBD.obtenerConversacion(criterio, function (mensajes) {
             if (mensajes == null) {
                 res.status(500);
                 res.json({
@@ -101,7 +109,7 @@ module.exports = function (app, gestorBD) {
     })
 
     //Este método marca como leido un mensaje
-    app.get("/api/mensaje/leido/:id", function (req, res) {
+    app.get("/api/mensaje/:id/leido", function (req, res) {
         let criterio = {
             "_id": gestorBD.mongo.ObjectID(req.params.id)
         };
@@ -130,13 +138,13 @@ module.exports = function (app, gestorBD) {
         })
     })
 
-    //Este método borra todos los mensajes de una oferta
-    app.delete("/api/mensaje/:id", function (req, res) {
+    //Este método borra todos los mensajes de una oferta (una conversacion)
+    app.delete("/api/mensajes/:id", function (req, res) {
         let criterio = {
-            "oferta": gestorBD.mongo.ObjectID(req.params.id)
+            "oferta": gestorBD.mongo.ObjectID(req.params.id),
+            "interesado": req.session.usuario
         };
-
-        gestorBD.eliminarMensaje(criterio, function (result) {
+        gestorBD.eliminarConversacion(criterio, function (result) {
             if (result == null) {
                 res.status(500);
                 res.json({
@@ -147,5 +155,43 @@ module.exports = function (app, gestorBD) {
                 res.send("Conversación eliminada");
             }
         })
-    })
+    });
+
+    function nuevaConversacion(criterio,mensaje, req, res) {
+        let criterioOfertaAChatear = {"_id": criterio.oferta};
+        gestorBD.obtenerOfertas(criterioOfertaAChatear, function (ofertas) {
+            if (ofertas == null) {
+                res.status(500);
+                res.json({
+                    error: "se ha producido un error"
+                })
+            } else {
+                let conversacion = {
+                    "vendedor": ofertas[0].usuario,
+                    "interesado": criterio.interesado,
+                    "oferta": criterio.oferta
+                }
+                gestorBD.insertarConversacion(conversacion, function (result) {
+                    if (conversacion == null) {
+                        res.status(500);
+                        res.json({
+                            error: "se ha producido un error"
+                        })
+                    } else {
+                        gestorBD.insertarMensaje(mensaje, function (id) {
+                            if (id == null) {
+                                res.status(500);
+                                res.json({
+                                    error: "se ha producido un error"
+                                })
+                            } else {
+                                res.status(200);
+                                res.send(JSON.stringify(mensaje));
+                            }
+                        })
+                    }
+                })
+            }
+        })
+    }
 }

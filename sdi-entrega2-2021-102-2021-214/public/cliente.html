@@ -22,7 +22,6 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav" id="barra-menu">
-                <li><a onclick=widgetMensajes()>Mensajes</a></li>
                 <li><a onclick=widgetOfertas()>Ofertas</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right" id="barra-menu-derecha">
@@ -46,10 +45,6 @@
     if ( Cookies.get('token') != null ){
         token = Cookies.get('token');
         widgetOfertas();
-    }
-
-    function widgetMensajes(){
-        $( "#contenedor-principal" ).load( "widget-mensaje.html");
     }
 
     function widgetOfertas(){

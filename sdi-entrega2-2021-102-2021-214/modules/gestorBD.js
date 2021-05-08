@@ -160,6 +160,57 @@ module.exports = {
             }
         });
     },
+    insertarConversacion : function(conversacion, funcionCallback) {
+        this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
+            if (err) {
+                funcionCallback(null);
+            } else {
+                let collection = db.collection('conversaciones');
+                collection.insert(conversacion, function(err, result) {
+                    if (err) {
+                        funcionCallback(null);
+                    } else {
+                        funcionCallback(result.ops[0]._id);
+                    }
+                    db.close();
+                });
+            }
+        });
+    },
+    obtenerConversacion : function(criterio,funcionCallback){
+        this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
+            if (err) {
+                funcionCallback(null);
+            } else {
+                let collection = db.collection('conversaciones');
+                collection.find(criterio).toArray(function(err, conversacion) {
+                    if (err) {
+                        funcionCallback(null);
+                    } else {
+                        funcionCallback(conversacion);
+                    }
+                    db.close();
+                });
+            }
+        });
+    },
+    eliminarConversacion : function(criterio, funcionCallback) {
+        this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
+            if (err) {
+                funcionCallback(false);
+            } else {
+                let collection = db.collection('conversaciones');
+                collection.remove(criterio, function(err, result) {
+                    if (err) {
+                        funcionCallback(false);
+                    } else {
+                        funcionCallback(true);
+                    }
+                    db.close();
+                });
+            }
+        });
+    },
     obtenerMensajes : function(criterio,funcionCallback){
         this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
             if (err) {
@@ -188,23 +239,6 @@ module.exports = {
                         funcionCallback(null);
                     } else {
                         funcionCallback(result.ops[0]._id);
-                    }
-                    db.close();
-                });
-            }
-        });
-    },
-    eliminarMensaje : function(criterio, funcionCallback) {
-        this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
-            if (err) {
-                funcionCallback(false);
-            } else {
-                let collection = db.collection('mensajes');
-                collection.remove(criterio, function(err, result) {
-                    if (err) {
-                        funcionCallback(false);
-                    } else {
-                        funcionCallback(true);
                     }
                     db.close();
                 });
