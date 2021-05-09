@@ -16,7 +16,8 @@ module.exports = function (app, gestorBD) {
                     error: "se ha producido un error"
                 })
             } else {
-                let criterioConversacion = {"oferta": ofertas[0], "interesado": req.session.usuario}
+                //let criterioConversacion = {"oferta": ofertas[0], "interesado": req.session.usuario}
+                let criterioConversacion = {"oferta": ofertas, "interesado": req.session.usuario}
                 gestorBD.obtenerConversacion(criterioConversacion, function (conversaciones) {
                     if (conversaciones == null) {
                         res.status(500);
@@ -128,10 +129,10 @@ module.exports = function (app, gestorBD) {
                     error: "se ha producido un error"
                 })
             } else {
-                let criterio = {
+                let criterioAux = {
                     "conversacion": conversaciones[0]._id
                 }
-                gestorBD.eliminarMensajes(criterio, function (mensajes) {
+                gestorBD.eliminarMensajes(criterioAux, function (mensajes) {
                     if (mensajes == null) {
                         res.status(500);
                         res.json({

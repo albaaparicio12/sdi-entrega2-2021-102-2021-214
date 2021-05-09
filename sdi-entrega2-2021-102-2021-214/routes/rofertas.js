@@ -176,12 +176,12 @@ module.exports = function (app, swig, gestorBD) {
                     if (mensajes2 == null) {
                         res.send("error");
                     } else {
-                        //mensajes2.addAll(mensajes);
+                        let totalConversaciones = mensajes.concat(mensajes2);
                         let respuesta = swig.renderFile('views/listaMensajes.html',
                             {
                                 identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
                                 usuario: req.session.usuario,
-                                mensajes: mensajes2
+                                mensajes: totalConversaciones
                             });
                         res.send(respuesta);
                     }

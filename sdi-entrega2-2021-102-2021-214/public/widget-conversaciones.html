@@ -30,22 +30,31 @@
         });
     }
     function actualizarTabla(converMostrar){
-        $( "#tablaCuerpo" ).empty(); // Vaciar la tabla
-        for (i = 0; i < converMostrar.length; i++) {
-            $( "#tablaCuerpo" ).append(
-                "<tr id="+converMostrar[i]._id+">"+
-                "<td>"+converMostrar[i].oferta.titulo+"</td>" +
-                "<td> "+converMostrar[i].vendedor+":</td>" +
-                "<td> "+converMostrar[i].oferta.precio+"€</td>" +
-                "<td><a onClick=eliminarConversacion("+converMostrar[i]._id+")>Eliminar</a></td>" +
-                "</tr>" );
+        if(converMostrar[0].interesado == undefined){
+
+        } else {
+            $("#tablaCuerpo").empty(); // Vaciar la tabla
+            for (i = 0; i < converMostrar.length; i++) {
+                $("#tablaCuerpo").append(
+                    "<tr id=" + converMostrar[i]._id + ">" +
+                    "<td>" + converMostrar[i].oferta.titulo + "</td>" +
+                    "<td> " + converMostrar[i].vendedor + ":</td>" +
+                    "<td> " + converMostrar[i].oferta.precio + "€</td>" +
+                    "<td><a onclick=eliminarConversacion('" + converMostrar[i]._id + "')>Eliminar</a></td>" +
+                    //"<td><a onclick=widgetConversacion('" + converMostrar[i]._id + "')>Ver</a></td>" +
+                    "</tr>");
+            }
         }
     }
-    function eliminarConversacion(id){
+    function widgetConversacion(_id){
+        idOfertaConversacion = _id;
+        $( "#contenedor-principal" ).load( "widget-conversacion.html");
+    }
+    function eliminarConversacion(_id){
+        id = _id
         $.ajax({
-            url: URLbase + "/conversacion/" +id,
+            url: URLbase + "/conversacion/" + id,
             type: "DELETE",
-            dataType : 'json',
             headers: { "token": token },
             success : function(respuesta){
                 $( "#contenedor-principal" ).load("widget-conversaciones.html");

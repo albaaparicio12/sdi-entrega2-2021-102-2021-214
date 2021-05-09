@@ -204,7 +204,7 @@ module.exports = {
                     if (err) {
                         funcionCallback(false);
                     } else {
-                        funcionCallback(true);
+                        funcionCallback(result);
                     }
                     db.close();
                 });

@@ -35,16 +35,20 @@
         });
     }
     function actualizarTabla(ofertasMostrar){
-        $( "#tablaCuerpo" ).empty(); // Vaciar la tabla
-        for (i = 0; i < ofertasMostrar.length; i++) {
-            $( "#tablaCuerpo" ).append(
-                "<tr id="+ofertasMostrar[i]._id+">"+
-                "<td>"+ofertasMostrar[i].titulo+"</td>" +
-                "<td>"+ofertasMostrar[i].usuario+"</td>" +
-                "<td>"+ofertasMostrar[i].precio+"</td>" +
-                "<td>"+ofertasMostrar[i].detalles+"</td>" +
-                "<td><a onclick=widgetConversacion('"+ofertasMostrar[i]._id+"')> Enviar mensaje</a></td>" +
-                "</tr>" );
+        if(ofertasMostrar[0].precio == undefined){
+
+        } else {
+            $( "#tablaCuerpo" ).empty(); // Vaciar la tabla
+            for (i = 0; i < ofertasMostrar.length; i++) {
+                $( "#tablaCuerpo" ).append(
+                    "<tr id="+ofertasMostrar[i]._id+">"+
+                    "<td>"+ofertasMostrar[i].titulo+"</td>" +
+                    "<td>"+ofertasMostrar[i].usuario+"</td>" +
+                    "<td>"+ofertasMostrar[i].precio+"</td>" +
+                    "<td>"+ofertasMostrar[i].detalles+"</td>" +
+                    "<td><a onclick=widgetConversacion('"+ofertasMostrar[i]._id+"')> Enviar mensaje</a></td>" +
+                    "</tr>" );
+            }
         }
     }
     function widgetConversacion(_id){
