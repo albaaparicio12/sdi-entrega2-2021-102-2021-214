@@ -21,7 +21,6 @@
 </div>
 
 <script>
-
     $("#boton-login").click(function (){
         $.ajax({
             url: URLbase + "/autenticar",
@@ -32,7 +31,6 @@
             },
             dataType:'json',
             success: function(respuesta) {
-                console.log(respuesta.token); // <- Prueba
                 token = respuesta.token;
                 Cookies.set('token', respuesta.token);
                 $( "#contenedor-principal" ).load( "widget-oferta.html");

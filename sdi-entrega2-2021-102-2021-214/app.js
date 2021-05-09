@@ -71,7 +71,12 @@ routerUsuarioToken.use(function(req, res, next) {
 });
 
 // Aplicar routerUsuarioToken
-app.use('/api/oferta', routerUsuarioToken);
+app.use('/api/ofertas', routerUsuarioToken);
+app.use('/api/mensaje', routerUsuarioToken);
+app.use('/api/mensajes', routerUsuarioToken);
+app.use('/api/conversaciones', routerUsuarioToken);
+app.use('/api/conversacion', routerUsuarioToken);
+
 
 // routerUsuarioSession
 var routerUsuarioSession = express.Router();
@@ -121,6 +126,11 @@ app.set('db', "mongodb://admin:sdi@wallapop-shard-00-00.j68zr.mongodb.net:27017,
 require("./routes/rusuarios.js")(app, swig, gestorBD); // (app, param1, param2, etc.)
 require("./routes/rofertas.js")(app, swig, gestorBD);
 require("./routes/rapiofertas.js")(app, gestorBD);
+require("./routes/rapiconversaciones.js")(app, gestorBD);
+
+app.get('/', function (req, res) {
+    res.redirect('/identificarse');
+});
 
 https.createServer({
     key: fs.readFileSync('certificates/alice.key'),

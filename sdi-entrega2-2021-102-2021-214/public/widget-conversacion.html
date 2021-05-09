@@ -1,5 +1,4 @@
 <div id="widget-conversacion" >
-    <button class="btn" onclick="cargarMensajes()" >Actualizar</button>
     <table class="table table-hover">
         <thead>
             <tr>
@@ -62,6 +61,7 @@
                 mensaje : $("#mensaje").val()
             },
             dataType : 'json',
+            headers: { "token": token },
             success : function(respuesta){
                 actualizarTabla(respuesta);
             },
@@ -71,6 +71,5 @@
             }
         });
     });
-
-    cargarMensajes();
+    setInterval(function() { cargarMensajes(); }, 1000);
 </script>
