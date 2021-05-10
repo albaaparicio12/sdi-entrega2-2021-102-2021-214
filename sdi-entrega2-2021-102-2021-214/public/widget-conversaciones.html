@@ -1,5 +1,4 @@
 <div id="widget-conversaciones" >
-    <button class="btn" onclick="cargarConversaciones()" >Actualizar</button>
     <table class="table table-hover">
         <thead>
             <tr>
@@ -41,15 +40,12 @@
                     "<td> " + converMostrar[i].vendedor + ":</td>" +
                     "<td> " + converMostrar[i].oferta.precio + "€</td>" +
                     "<td><a onclick=eliminarConversacion('" + converMostrar[i]._id + "')>Eliminar</a></td>" +
-                    //"<td><a onclick=widgetConversacion('" + converMostrar[i]._id + "')>Ver</a></td>" +
+                    "<td><a onclick=widgetConversacion('" + converMostrar[i].oferta._id + "')>Ver</a></td>" +
                     "</tr>");
             }
         }
     }
-    function widgetConversacion(_id){
-        idOfertaConversacion = _id;
-        $( "#contenedor-principal" ).load( "widget-conversacion.html");
-    }
+
     function eliminarConversacion(_id){
         id = _id
         $.ajax({
@@ -66,5 +62,11 @@
         });
     }
 
+    function widgetConversacion(_id){
+        idOfertaConversacion = _id;
+        $( "#contenedor-principal" ).load( "widget-conversacion.html");
+    }
+
+    setInterval(function() { cargarConversaciones(); }, 1000);
     cargarConversaciones();
 </script>

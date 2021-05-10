@@ -251,7 +251,7 @@ module.exports = {
                 funcionCallback(null);
             } else {
                 let collection = db.collection('mensajes');
-                collection.update(criterio, {$set: mensaje}, function(err, result) {
+                collection.updateMany(criterio, {$set: mensaje}, function(err, result) {
                     if (err) {
                         funcionCallback(null);
                     } else {

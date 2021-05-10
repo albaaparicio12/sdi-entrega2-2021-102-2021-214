@@ -43,14 +43,17 @@
         });
     }
     function actualizarTabla(mensajesMostrar){
-        $( "#tablaCuerpo" ).empty(); // Vaciar la tabla
-        for (i = 0; i < mensajesMostrar.length; i++) {
-            $( "#tablaCuerpo" ).append(
-                "<tr id="+mensajesMostrar[i]._id+">"+
-                "<td>("+mensajesMostrar[i].fecha+")</td>" +
-                "<td> "+mensajesMostrar[i].emisor+":</td>" +
-                "<td>"+mensajesMostrar[i].mensaje+"</td>" +
-                "</tr>" );
+        if(mensajesMostrar[0].mensaje !== undefined){
+            $("#tablaCuerpo").empty(); // Vaciar la tabla
+            for (i = 0; i < mensajesMostrar.length; i++) {
+                $("#tablaCuerpo").append(
+                    "<tr id=" + mensajesMostrar[i]._id + ">" +
+                    "<td>(" + mensajesMostrar[i].fecha + ")</td>" +
+                    "<td> " + mensajesMostrar[i].emisor + ":</td>" +
+                    "<td>" + mensajesMostrar[i].mensaje + "</td>" +
+                    "<td>" +isLeido(mensajesMostrar[i].leido) + "</td>" +
+                    "</tr>");
+            }
         }
     }
     $("#boton-mensaje").click(function(){
@@ -71,5 +74,14 @@
             }
         });
     });
+
+    function isLeido(leido){
+        if(leido)
+            return "&ltleído&gt";
+        else
+            return "";
+    }
+
+    cargarMensajes();
     setInterval(function() { cargarMensajes(); }, 1000);
 </script>

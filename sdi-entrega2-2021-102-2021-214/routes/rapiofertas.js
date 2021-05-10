@@ -24,7 +24,7 @@ module.exports = function (app, gestorBD) {
             password: seguro
         }
         gestorBD.obtenerUsuarios(criterio, function (usuarios) {
-            if (usuarios == null || usuarios.length == 0) {
+            if (usuarios == null || usuarios.length === 0) {
                 res.status(401); //Unauthorized
                 res.json({
                     autenticado: false
