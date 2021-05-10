@@ -23,6 +23,9 @@ module.exports = function(app, swig, gestorBD) {
         if(req.body.password !== req.body.repetirPassword){
             res.redirect("/usuario/add?mensaje=Error con las passwords, no coinciden &tipoMensaje=alert-danger");
         }
+        if(!req.body.email.contains("@")){
+            res.redirect("/usuario/add?mensaje=Error con el email &tipoMensaje=alert-danger");
+        }
         else {
             usuarioYaRegistrado({"email": usuario.email}, function (estaRegistrado) {
                 if (estaRegistrado) {

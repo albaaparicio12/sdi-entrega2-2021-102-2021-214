@@ -44,16 +44,16 @@
     }
     function actualizarTabla(mensajesMostrar){
         if(mensajesMostrar[0].mensaje !== undefined){
-            $("#tablaCuerpo").empty(); // Vaciar la tabla
-            for (i = 0; i < mensajesMostrar.length; i++) {
-                $("#tablaCuerpo").append(
-                    "<tr id=" + mensajesMostrar[i]._id + ">" +
-                    "<td>(" + mensajesMostrar[i].fecha + ")</td>" +
-                    "<td> " + mensajesMostrar[i].emisor + ":</td>" +
-                    "<td>" + mensajesMostrar[i].mensaje + "</td>" +
-                    "<td>" +isLeido(mensajesMostrar[i].leido) + "</td>" +
-                    "</tr>");
-            }
+                $("#tablaCuerpo").empty(); // Vaciar la tabla
+                for (i = 0; i < mensajesMostrar.length; i++) {
+                    $("#tablaCuerpo").append(
+                        "<tr id=" + mensajesMostrar[i]._id + ">" +
+                        "<td>(" + mensajesMostrar[i].fecha + ")</td>" +
+                        "<td> " + mensajesMostrar[i].emisor + ":</td>" +
+                        "<td>" + mensajesMostrar[i].mensaje + "</td>" +
+                        "<td>" +isLeido(mensajesMostrar[i].leido) + "</td>" +
+                        "</tr>");
+                }
         }
     }
     $("#boton-mensaje").click(function(){

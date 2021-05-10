@@ -153,6 +153,9 @@ module.exports = function (app, gestorBD) {
                     } else {
                         //aqui se unirían las listas conversaciones y conversacionesAux
                         let totalConversaciones = conversacionesAux.concat(conversaciones);
+                        for(i = 0; i < totalConversaciones.length;i++){
+                            totalConversaciones[i].noLeidos = getTotalNoLeidos(totalConversaciones[i], req, res);
+                        }
                         res.status(200);
                         res.send(JSON.stringify(totalConversaciones));
                     }
@@ -160,6 +163,20 @@ module.exports = function (app, gestorBD) {
             }
         });
     });
+
+    function getTotalNoLeidos(conversacion, req, res){
+        let criterio = {
+            "conversacion" : gestorBD.mongo.ObjectID(conversacion.id),
+            "leido" : false
+        };
+        gestorBD.obtenerMensajes(criterio,function (mensajes){
+            if (mensajes == null){
+                res.send("Error");
+            } else {
+                 return mensajes.length;
+            }
+        })
+    }
 
     function nuevaConversacion(criterio, mensaje, req, res) {
         let conversacion = {
@@ -199,7 +216,6 @@ module.exports = function (app, gestorBD) {
                             error: "se ha producido un error"
                         })
                     } else {
-
                         res.status(200);
                         res.send(JSON.stringify(mensajes));
                     }
