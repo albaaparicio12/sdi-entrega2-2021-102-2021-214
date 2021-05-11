@@ -190,7 +190,7 @@ module.exports = function (app, gestorBD) {
                     } else {
                         let totalConversaciones = conversacionesAux.concat(conversaciones);
                         for (let i = 0; i < totalConversaciones.length; i++) {
-                            totalConversaciones[i].noLeidos = getTotalNoLeidos(totalConversaciones[i], req, res);
+                            totalConversaciones[i].noLeidos = actualizarLeidos(totalConversaciones[i]);
                         }
                         res.status(200);
                         res.send(JSON.stringify(totalConversaciones));
@@ -200,16 +200,42 @@ module.exports = function (app, gestorBD) {
         });
     });
 
+    function actualizarLeidos(conversacion){
+        let criterio1 = {
+            "conversacion" : gestorBD.mongo.ObjectID(conversacion.id),
+            "leido" : false
+        };
+        let criterio2 = {"_id" : gestorBD.mongo.ObjectID(conversacion.id)};
+        gestorBD.obtenerConversacion(criterio2,function (conversacion) {
+            if(conversacion == null){
+
+            } else {
+                gestorBD.obtenerMensajes(criterio1,function(mensajes){
+                    if(mensajes == null){
+
+                    } else {
+                        return mensajes.length;
+                    }
+                })
+            }
+        })
+    }
+
     function getTotalNoLeidos(conversacion, req, res) {
         let criterio = {
-            "conversacion": gestorBD.mongo.ObjectID(conversacion.id),
-            "leido": false
+            "conversacion": gestorBD.mongo.ObjectID(conversacion.id)
         };
+        let counter = 0;
         gestorBD.obtenerMensajes(criterio, function (mensajes) {
             if (mensajes == null) {
                 res.send("Error");
             } else {
-                return mensajes.length;
+                for(i = 0; i<mensajes.length ; i++){
+                    if(mensajes[i].leido == true){
+                        counter = counter + 1;
+                    }
+                }
+                return counter;
             }
         })
     }
@@ -218,7 +244,8 @@ module.exports = function (app, gestorBD) {
         let conversacion = {
             "vendedor": criterio.oferta.usuario,
             "interesado": criterio.interesado,
-            "oferta": criterio.oferta
+            "oferta": criterio.oferta,
+            "noLeidos" : 0
         }
         gestorBD.insertarConversacion(conversacion, function (result) {
             if (result === null) {
