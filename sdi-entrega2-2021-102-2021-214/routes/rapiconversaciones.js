@@ -1,9 +1,10 @@
-module.exports = function (app, gestorBD) {
+module.exports = function (app, gestorBD, logger) {
 
-    //S3 Usuario identificado: Enviar mensajes a una oferta
-    //Este método  crea un mensaje para la oferta X. Si no hay ninguna conversacion previa crea una.
-    //En el caso de que el usuario sea propietario de la oferta, el mensaje se añade a la conversación. Si
-    //la conversación no está previamente creada dará error (ya que no puedes iniciar una conversación contigo mismo)
+    /* S3 Usuario identificado: Enviar mensajes a una oferta
+    Este método  crea un mensaje para la oferta X. Si no hay ninguna conversacion previa crea una.
+    En el caso de que el usuario sea propietario de la oferta, el mensaje se añade a la conversación. Si
+    la conversación no está previamente creada dará error (ya que no puedes iniciar una conversación contigo mismo)
+     */
     app.post("/api/mensajes/:id/nuevo", function (req, res) {
         let mensaje = {
             "mensaje": req.body.mensaje,
@@ -21,14 +22,16 @@ module.exports = function (app, gestorBD) {
                 let criterioOferta = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
                 gestorBD.obtenerOfertas(criterioOferta, function (ofertas) {
                     if (ofertas == null) {
+                        logger.error("Nuevo Mensaje: No se pudo obtener el listado de ofertas de la bbdd");
                         res.status(500);
                         res.json({
                             error: "se ha producido un error"
                         })
                     } else {
-                        let criterioConversacion = criterioConversacionEsVendedor(ofertas[0], req);
+                        let criterioConversacion = criterioConversacionEsVendedorOInteresado(ofertas[0], req);
                         gestorBD.obtenerConversacion(criterioConversacion, function (conversaciones) {
                                 if (conversaciones == null) {
+                                    logger.error("Nuevo Mensaje: No se pudo obtener la conversación de la bbdd");
                                     res.status(500);
                                     res.json({
                                         error: "se ha producido un error"
@@ -57,20 +60,23 @@ module.exports = function (app, gestorBD) {
         });
     });
 
-    //S4 Usuario identificado: Obtener los mensajes de una conversación
-    //Este método saca todos los mensajes de una oferta en las que el interesado sea el usuario en sesion.
-    //Si no tiene una conversación previa en esa oferta devuelve un Array vacío.
+    /* S4 Usuario identificado: Obtener los mensajes de una conversación
+    Este método saca todos los mensajes de una oferta en las que el interesado sea el usuario en sesion.
+    Si no tiene una conversación previa en esa oferta devuelve un Array vacío.
+     */
     app.get("/api/mensajes/:id", function (req, res) {
         let criterioOferta = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
         gestorBD.obtenerOfertas(criterioOferta, function (ofertas) {
             if (ofertas == null) {
+                logger.error("Conversación: No se pudo obtener la oferta de la bbdd");
                 res.status(500);
                 res.json({
                     error: "se ha producido un error"
                 })
             } else {
-                gestorBD.obtenerConversacion(criterioConversacionEsVendedor(ofertas[0], req), function (conversaciones) {
+                gestorBD.obtenerConversacion(criterioConversacionEsVendedorOInteresado(ofertas[0], req), function (conversaciones) {
                     if (conversaciones == null) {
+                        logger.error("Conversación: No se pudo obtener la conversación de la bbdd");
                         res.status(500);
                         res.json({
                             error: "se ha producido un error"
@@ -89,6 +95,7 @@ module.exports = function (app, gestorBD) {
                                 let criterioMensajes = {"conversacion": gestorBD.mongo.ObjectID(conversaciones[0]._id)};
                                 gestorBD.obtenerMensajes(criterioMensajes, function (mensajes) {
                                     if (mensajes == null) {
+                                        logger.error("Conversación: No se pudo obtener el listado de mensajes de la bbdd");
                                         res.status(500);
                                         res.json({
                                             error: "se ha producido un error"
@@ -105,38 +112,39 @@ module.exports = function (app, gestorBD) {
         });
     });
 
-    //S5: Obtener el listado de conversaciones
-    //Este método te devuelve la lista de conversaciones del usuario en sesión
+    /* S5: Obtener el listado de conversaciones
+    Este método te devuelve la lista de conversaciones del usuario en sesión
+    */
     app.get("/api/conversaciones", function (req, res) {
         let criterio = {interesado: req.session.usuario};
         let criterioAux = {vendedor: req.session.usuario};
 
         gestorBD.obtenerConversacion(criterio, function (conversaciones) {
             if (conversaciones == null) {
+                logger.error("Listado Conversaciones: No se pudo obtener el listado de conversaciones de la bbdd");
                 res.send("Error");
             } else {
                 gestorBD.obtenerConversacion(criterioAux, function (conversacionesAux) {
                     if (conversacionesAux == null) {
+                        logger.error("Listado Conversaciones: No se pudo obtener el listado de conversaciones de la bbdd");
                         res.send("Error");
                     } else {
                         let totalConversaciones = conversacionesAux.concat(conversaciones);
-                        for (let i = 0; i < totalConversaciones.length; i++) {
-                            totalConversaciones[i].noLeidos = actualizarLeidos(totalConversaciones[i]);
-                        }
-                        res.status(200);
-                        res.send(JSON.stringify(totalConversaciones));
+                        actualizarNumMensajesNoLeidos(totalConversaciones, req, res);
                     }
                 })
             }
         });
     });
 
-    //S6: Eliminar una conversación
-    //Este método elimina una conversación y todos los mensajes de esta
+    /* S6: Eliminar una conversación
+    Este método elimina una conversación y todos los mensajes de esta
+     */
     app.delete("/api/conversacion/:id", function (req, res) {
         let criterio = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
         gestorBD.obtenerConversacion(criterio, function (conversaciones) {
             if (conversaciones == null) {
+                logger.error("Eliminar Conversación: No se pudo obtener la conversación de la bbdd");
                 res.status(500);
                 res.json({
                     error: "se ha producido un error"
@@ -152,6 +160,7 @@ module.exports = function (app, gestorBD) {
                         let criterioAux = {"conversacion": conversaciones[0]._id}
                         gestorBD.eliminarMensajes(criterioAux, function (mensajes) {
                             if (mensajes == null) {
+                                logger.error("Eliminar Conversación: No se pudo eliminar el listado de mensajes de la bbdd");
                                 res.status(500);
                                 res.json({
                                     error: "se ha producido un error"
@@ -159,11 +168,13 @@ module.exports = function (app, gestorBD) {
                             } else {
                                 gestorBD.eliminarConversacion(criterio, function (result) {
                                     if (result == null) {
+                                        logger.error("Eliminar Conversación: No se pudo eliminar la conversación de la bbdd");
                                         res.status(500);
                                         res.json({
                                             error: "se ha producido un error"
                                         })
                                     } else {
+                                        logger.info("Conversación eliminada con éxito.");
                                         res.status(201);
                                         res.send("Conversación eliminada");
                                     }
@@ -176,10 +187,13 @@ module.exports = function (app, gestorBD) {
         })
     });
 
-    //S7: Marcar mensaje como leído
-    //Este método marca como leido un mensaje
+    /*S7: Marcar mensaje como leído
+    Este método marca como leido un mensaje
+     */
     app.put("/api/mensaje/:id/leido", function (req, res) {
         let criterio = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
+
+        //   ----------- Validación del usuario ---------------
         let errores = [];
         validarUsuario(req.session.usuario, errores);
         if (req.params.id == null || typeof req.params.id === 'undefined') {
@@ -190,6 +204,7 @@ module.exports = function (app, gestorBD) {
         }
         gestorBD.obtenerMensajes(criterio, function (mensajes) {
             if (mensajes == null) {
+                logger.error("Marcar Mensaje Leído: No se pudo obtener la lista de mensajes de la bbdd");
                 res.status(500);
                 res.json({
                     error: "Error: no se ha encontrado el mensaje."
@@ -212,10 +227,12 @@ module.exports = function (app, gestorBD) {
                                 errores: errores
                             })
                         } else {
+                            //   ----------- Fin Validación ---------------
                             let mensaje = mensajes[0];
                             mensaje.leido = true;
                             gestorBD.modificarMensaje(criterio, mensaje, function (msg) {
                                 if (msg == null) {
+                                    logger.error("Marcar Mensaje Leído: No se pudo marcar como leído el mensaje de la bbdd");
                                     res.status(500);
                                     res.json({
                                         error: "se ha producido un error"
@@ -231,49 +248,63 @@ module.exports = function (app, gestorBD) {
                         }
                     }
                 });
-
             }
         })
     });
 
-    function actualizarLeidos(conversacion) {
-        let criterio1 = {
-            "conversacion": gestorBD.mongo.ObjectID(conversacion.id),
-            "leido": false
-        };
-        let criterio2 = {"_id": gestorBD.mongo.ObjectID(conversacion.id)};
-        gestorBD.obtenerConversacion(criterio2, function (conversacion) {
-            if (conversacion == null) {
-
-            } else {
-                gestorBD.obtenerMensajes(criterio1, function (mensajes) {
+    function actualizarNumMensajesNoLeidos(totalConversaciones, req, res) {
+        if (totalConversaciones.length === 0) {
+            res.status(200);
+            res.send(JSON.stringify([]));
+        } else {
+            for (let i = 0; i < totalConversaciones.length; i++) {
+                let criterioMensajes = {$and: [{"conversacion": gestorBD.mongo.ObjectID(totalConversaciones[i]._id)}, {"leido": false}, {"emisor": {$ne: req.session.usuario}}]};
+                let criterioConversacion = {"_id": gestorBD.mongo.ObjectID(totalConversaciones[i]._id)};
+                gestorBD.obtenerMensajes(criterioMensajes, function (mensajes) {
                     if (mensajes == null) {
-
+                        logger.error("Actualizar Nº No Leidos: No se pudo obtener la lista de mensajes de la bbdd");
+                        res.status(500);
+                        res.json({
+                            error: "se ha producido un error"
+                        })
                     } else {
-                        return mensajes.length;
-                    }
-                })
-            }
-        })
-    }
+                        let conversacionActualizada = {"noLeidos": mensajes.length};
+                        gestorBD.modificarConversacion(criterioConversacion, conversacionActualizada, function (result) {
+                            if (result == null) {
+                                logger.error("Actualizar Nº No Leidos: No se pudomodificar la conversación de la bbdd");
+                                res.status(500);
+                                res.json({
+                                    error: "se ha producido un error"
+                                })
+                            } else {
+                                if (i === totalConversaciones.length - 1) {
+                                    let criterio = {interesado: req.session.usuario};
+                                    let criterioAux = {vendedor: req.session.usuario};
 
-    function getTotalNoLeidos(conversacion, req, res) {
-        let criterio = {
-            "conversacion": gestorBD.mongo.ObjectID(conversacion.id)
-        };
-        let counter = 0;
-        gestorBD.obtenerMensajes(criterio, function (mensajes) {
-            if (mensajes == null) {
-                res.send("Error");
-            } else {
-                for (i = 0; i < mensajes.length; i++) {
-                    if (mensajes[i].leido == true) {
-                        counter = counter + 1;
+                                    gestorBD.obtenerConversacion(criterio, function (conversaciones) {
+                                        if (conversaciones == null) {
+                                            logger.error("Actualizar Nº No Leidos: No se pudo obtener el listado de conversaciones de la bbdd");
+                                            res.send("Error");
+                                        } else {
+                                            gestorBD.obtenerConversacion(criterioAux, function (conversacionesAux) {
+                                                if (conversacionesAux == null) {
+                                                    logger.error("Actualizar Nº No Leidos: No se pudo obtener el listado de conversaciones de la bbdd");
+                                                    res.send("Error");
+                                                } else {
+                                                    let totalConversaciones = conversacionesAux.concat(conversaciones);
+                                                    res.status(200);
+                                                    res.send(JSON.stringify(totalConversaciones));
+                                                }
+                                            })
+                                        }
+                                    });
+                                }
+                            }
+                        });
                     }
-                }
-                return counter;
+                });
             }
-        })
+        }
     }
 
     function nuevaConversacion(criterio, mensaje, req, res) {
@@ -283,18 +314,27 @@ module.exports = function (app, gestorBD) {
             "oferta": criterio.oferta,
             "noLeidos": 0
         }
-        gestorBD.insertarConversacion(conversacion, function (result) {
-            if (result === null) {
-                res.status(500);
+        validarConversacion(conversacion, function (errores) {
+            if (errores !== null && errores.length > 0) {
+                res.status(403); //Forbidden
                 res.json({
-                    error: "se ha producido un error"
+                    errores: errores
                 })
             } else {
-                let conversacionId = {"conversacion": result}
-                insertarMensajeNuevo(mensaje, conversacionId, res);
+                gestorBD.insertarConversacion(conversacion, function (result) {
+                    if (result === null) {
+                        logger.error("Nueva Conversación: No se pudo insertar la conversación en la bbdd");
+                        res.status(500);
+                        res.json({
+                            error: "se ha producido un error"
+                        })
+                    } else {
+                        let conversacionId = {"conversacion": result}
+                        insertarMensajeNuevo(mensaje, conversacionId, res);
+                    }
+                });
             }
-        })
-
+        });
     }
 
     function marcarMensajesComoLeido(idConversacion, req, res) {
@@ -302,6 +342,7 @@ module.exports = function (app, gestorBD) {
         let mensajeLeido = {"leido": true}
         gestorBD.modificarMensaje(criterioNoLeido, mensajeLeido, function (msg) {
             if (msg == null) {
+                logger.error("Marcar Mensaje Leído: No se pudo modificar el mensaje en la bbdd");
                 res.status(500);
                 res.json({
                     error: "se ha producido un error"
@@ -310,6 +351,7 @@ module.exports = function (app, gestorBD) {
                 let criterioTotalMensajes = {"conversacion": gestorBD.mongo.ObjectID(idConversacion)}
                 gestorBD.obtenerMensajes(criterioTotalMensajes, function (mensajes) {
                     if (mensajes == null) {
+                        logger.error("Marcar Mensaje Leído: No se pudo obtener la lista de mensajes de la bbdd");
                         res.status(500);
                         res.json({
                             error: "se ha producido un error"
@@ -327,9 +369,10 @@ module.exports = function (app, gestorBD) {
         let mensajeNuevo = Object.assign(mensaje, conversacionId);
         gestorBD.insertarMensaje(mensajeNuevo, function (id) {
             if (id == null) {
+                logger.error("Mensaje Nuevo: No se pudo insertar el mensaje en la bbdd");
                 res.status(500);
                 res.json({
-                    error: "se ha producido un error"
+                    error: "Error: no se ha podido insertar el mensaje."
                 })
             } else {
                 res.status(200);
@@ -338,7 +381,7 @@ module.exports = function (app, gestorBD) {
         })
     }
 
-    function criterioConversacionEsVendedor(oferta, req) {
+    function criterioConversacionEsVendedorOInteresado(oferta, req) {
         let criterioConversacion;
         if (oferta.usuario === req.session.usuario) {
             criterioConversacion = {"oferta": oferta, "vendedor": req.session.usuario};
@@ -346,34 +389,6 @@ module.exports = function (app, gestorBD) {
             criterioConversacion = {"oferta": oferta, "interesado": req.session.usuario};
         }
         return criterioConversacion;
-    }
-
-    function validarSiEsVendedorOInteresadoMensaje(usuario, idMensaje, functionCallback) {
-        let errores = [];
-        validarUsuario(usuario, errores);
-        if (idMensaje == null || typeof idMensaje === 'undefined')
-            errores.push("Error: no se ha detectado ningun mensaje.");
-        gestorBD.obtenerMensajes({"_id": gestorBD.mongo.ObjectID(idMensaje)}, function (mensajes) {
-            if (mensajes == null || mensajes.length === 0) {
-                errores.push("Error: no se ha encontrado el mensaje.");
-            } else {
-                if (mensajes[0].emisor == null || typeof mensajes[0].emisor === 'undefined')
-                    errores.push("Error en el mensaje: no se ha detectado ningun emisor.");
-                gestorBD.obtenerConversacion({"_id": gestorBD.mongo.ObjectID(mensajes[0].conversacion)}, function (conversaciones) {
-                    if (conversaciones == null || conversaciones.length === 0) {
-                        errores.push("Error en el mensaje: no pertenece a ninguna conversación.")
-                    } else {
-                        validarSiEsVendedorOInteresadoConversacion(usuario, conversaciones[0], function (erroresConversacion) {
-                            if (erroresConversacion != null && erroresConversacion.length > 0) {
-                                errores = errores.concat(erroresConversacion);
-                            }
-                        });
-                    }
-                });
-            }
-        });
-
-        functionCallback(errores);
     }
 
     function validarSiEsVendedorOInteresadoConversacion(usuario, conversacion, functionCallback) {
@@ -393,6 +408,20 @@ module.exports = function (app, gestorBD) {
     function validarUsuario(usuario, errores) {
         if (usuario == null || typeof usuario === 'undefined')
             errores.push("Error: no se ha detectado ningún usuario.");
+    }
+
+    function validarConversacion(conversacion, functionCallback) {
+        let errores = [];
+        if (conversacion == null || typeof conversacion === 'undefined')
+            errores.push("Error: no se ha detectado ninguna conversación.");
+        if (conversacion.vendedor == null || typeof conversacion.vendedor === 'undefined')
+            errores.push("Error en la conversación: no se ha detectado ningun vendedor.");
+        if (conversacion.interesado == null || typeof conversacion.interesado === 'undefined')
+            errores.push("Error en la conversación: no se ha detectado ningun interesado.");
+        if (conversacion.oferta == null || typeof conversacion.oferta === 'undefined')
+            errores.push("Error en la conversación: no se ha detectado ninguna oferta.");
+
+        functionCallback(errores);
     }
 
     function validarSiEsPropietarioOferta(usuario, oferta, functionCallback) {

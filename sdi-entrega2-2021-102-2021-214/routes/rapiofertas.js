@@ -1,10 +1,11 @@
-module.exports = function (app, gestorBD) {
+module.exports = function (app, gestorBD, logger) {
 
     //S2 Usuario identificado: Mostrar listado de ofertas disponibles (Sólo las ofertas de los otros
     // usuarios)
     app.get("/api/ofertas", function (req, res) {
         gestorBD.obtenerOfertas({}, function (ofertas) {
             if (ofertas == null) {
+                logger.error("Listado Oferta: No se pudo obtener el listado de ofertas de la bbdd");
                 res.status(500);
                 res.json({
                     error: "Se ha producido un error al cargar las ofertas"
@@ -35,12 +36,14 @@ module.exports = function (app, gestorBD) {
             } else {
                 gestorBD.obtenerUsuarios(criterio, function (usuarios) {
                     if (usuarios == null || usuarios.length === 0) {
+                        logger.error("Identificarse: No se pudo obtener el usuario de la bbdd");
                         res.status(401); //Unauthorized
                         res.json({
                             autenticado: false,
                             error: "Email o contraseña incorrectos."
                         })
                     } else {
+                        logger.info("Usuario " + criterio.email + " identificado con éxito.");
                         req.session.usuario = criterio.email;
                         let token = app.get('jwt').sign(
                             {usuario: criterio.email, tiempo: Date.now() / 1000},
@@ -58,11 +61,12 @@ module.exports = function (app, gestorBD) {
 
     function validarUsuario(usuario, functionCallback) {
         let errores = [];
-        if (usuario == null || typeof usuario === 'undefined')
+        if (usuario == null || typeof usuario === 'undefined') {
             errores.push("Error: no se ha detectado ningún usuario.");
-        if (usuario.email == null || typeof usuario.email === 'undefined' || usuario.email.length < 4)
+        }
+        if (usuario.email == null || typeof usuario.email === 'undefined' || usuario.email.length < 4) {
             errores.push("Error: email incorrecto");
-
+        }
         functionCallback(errores);
     }
 }

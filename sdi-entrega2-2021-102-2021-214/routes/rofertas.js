@@ -1,4 +1,6 @@
-module.exports = function (app, swig, gestorBD) {
+module.exports = function (app, swig, gestorBD, logger) {
+
+    //W6 Usuario registrado: Dar de alta una nueva oferta
     app.get("/oferta/add", function (req, res) {
         let respuesta = swig.renderFile('views/bofertaNueva.html', {
             identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
@@ -21,6 +23,7 @@ module.exports = function (app, swig, gestorBD) {
         if (validarOferta(oferta, res)) {
             gestorBD.insertarOferta(oferta, function (id) {
                 if (id == null) {
+                    logger.error("Añadir oferta: No se pudo insertar la nueva oferta");
                     res.redirect("/oferta/add?mensaje=Error al insertar la oferta &tipoMensaje=alert-danger");
                 } else {
                     if (oferta.destacada === "true") {
@@ -33,11 +36,32 @@ module.exports = function (app, swig, gestorBD) {
         }
     });
 
+    // W7 Usuario registrado: Listado de ofertas propias
+    app.get('/oferta/listado', function (req, res) {
+        let criterio = {"usuario": req.session.usuario.email};
+        gestorBD.obtenerOfertas(criterio, function (lista) {
+            if (lista == null) {
+                logger.error("Listado ofertas: No se pudo obtener la lista de ofertas de la bbdd.");
+                res.send("Error al listar ofertas");
+            } else {
+                let respuesta = swig.renderFile('views/listadoOfertas.html',
+                    {
+                        listado: lista,
+                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
+                        usuario: req.session.usuario
+                    });
+                res.send(respuesta);
+            }
+        });
+    });
+
+    // W8 Usuario registrado: Dar de baja una oferta
     app.get("/oferta/borrar/:id", function (req, res) {
         let criterio = {$and: [{"_id": gestorBD.mongo.ObjectID(req.params.id)}, {"disponible": "Comprar"}]};
         let criterioU = {"usuario": req.session.usuario.email};
         gestorBD.obtenerOfertas({"_id": gestorBD.mongo.ObjectID(req.params.id)}, function (ofertas) {
             if (ofertas == null || ofertas.length === 0) {
+                logger.error("Eliminar oferta: No se pudo obtener la oferta de la bbdd.");
                 res.send("Error al obtener la oferta.");
             } else {
                 if (ofertas[0].usuario !== req.session.usuario.email) {
@@ -46,10 +70,12 @@ module.exports = function (app, swig, gestorBD) {
                     if (validarUsuarioYOferta(req.session.usuario.email, req.params.id, res)) {
                         gestorBD.eliminarOferta(criterio, function (result) {
                             if (result === false) {
+                                logger.error("Eliminar oferta: No se pudo borrar la oferta de la bbdd.");
                                 res.redirect("/oferta/borrar?mensaje=Error al borrar la oferta. &tipoMensaje=alert-danger");
                             } else {
                                 gestorBD.obtenerOfertas(criterioU, function (lista) {
                                     if (lista == null) {
+                                        logger.error("Eliminar oferta: No se pudo obtener la lista de ofertas de la bbdd.");
                                         res.send("Error al listar ofertas");
                                     } else {
                                         let respuesta = swig.renderFile('views/listadoOfertas.html',
@@ -70,41 +96,7 @@ module.exports = function (app, swig, gestorBD) {
 
     });
 
-    app.get('/oferta/listado', function (req, res) {
-        let criterio = {"usuario": req.session.usuario.email};
-        gestorBD.obtenerOfertas(criterio, function (lista) {
-            if (lista == null) {
-                res.send("Error al listar ofertas");
-            } else {
-                let respuesta = swig.renderFile('views/listadoOfertas.html',
-                    {
-                        listado: lista,
-                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
-                        usuario: req.session.usuario
-                    });
-                res.send(respuesta);
-            }
-        });
-    });
-
-    app.get("/oferta/destacadas", function (req, res) {
-        let criterio = {"destacada": "true"};
-
-        gestorBD.obtenerOfertas(criterio, function (lista) {
-            if (lista == null) {
-                res.send("Error al listar ofertas");
-            } else {
-                let respuesta = swig.renderFile('views/listadoDestacadas.html',
-                    {
-                        listado: lista,
-                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
-                        usuario: req.session.usuario
-                    });
-                res.send(respuesta);
-            }
-        });
-    })
-
+    // W9 Usuario registrado: Buscar ofertas
     app.get("/oferta/tienda", function (req, res) {
         let criterio = {};
         if (req.query.busqueda != null) {
@@ -118,6 +110,7 @@ module.exports = function (app, swig, gestorBD) {
 
         gestorBD.obtenerOfertasPg(criterio, pg, function (ofertas, total) {
             if (ofertas == null) {
+                logger.error("Tienda: No se pudo obtener la lista de ofertas de la bbdd.");
                 res.send("Error al listar ");
             } else {
                 let ultimaPg = total / 5;
@@ -144,11 +137,13 @@ module.exports = function (app, swig, gestorBD) {
         });
     });
 
+    // W10 Usuario registrado: Comprar una oferta
     app.get("/oferta/comprar/:id", function (req, res) {
         let criterio = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
 
         gestorBD.obtenerOfertas(criterio, function (ofertas) {
             if (ofertas == null) {
+                logger.error("Comprar Oferta: No se pudo obtener la lista de ofertas de la bbdd.");
                 res.send("Error al comprar oferta");
             } else {
                 if (validarOferta(ofertas[0], res)) {
@@ -158,11 +153,13 @@ module.exports = function (app, swig, gestorBD) {
         });
     });
 
+    // W11 Usuario registrado: Ver el listado de ofertas compradas
     app.get("/oferta/compras/", function (req, res) {
         let criterio = {"comprador": req.session.usuario.email};
 
         gestorBD.obtenerOfertas(criterio, function (lista) {
             if (lista == null) {
+                logger.error("Ofertas Compradas: No se pudo obtener la lista de ofertas de la bbdd.");
                 res.send("Error al listar ofertas");
             } else {
                 let respuesta = swig.renderFile('views/listadoCompras.html',
@@ -176,116 +173,12 @@ module.exports = function (app, swig, gestorBD) {
         });
     })
 
-    app.get("/oferta/mensajes", function (req, res) {
-        let criterio = {vendedor: req.session.usuario};
-        let criterioAux = {interesado: req.session.usuario};
-
-        gestorBD.obtenerMensajes(criterio, function (mensajes) {
-            if (mensajes == null) {
-                res.send("Error al obtener sus mensajes.")
-            } else {
-                gestorBD.obtenerMensajes(criterioAux, function (mensajes2) {
-                    if (mensajes2 == null) {
-                        res.send("error");
-                    } else {
-                        let totalConversaciones = mensajes.concat(mensajes2);
-                        let respuesta = swig.renderFile('views/listaMensajes.html',
-                            {
-                                identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
-                                usuario: req.session.usuario,
-                                mensajes: totalConversaciones
-                            });
-                        res.send(respuesta);
-                    }
-                })
-            }
-        })
-    })
-
-    app.get("/oferta/mensaje/:id", function (req, res) {
-        let criterio = {oferta: gestorBD.mongo.ObjectID(req.params.id)};
-        let criterioAux = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
-
-        gestorBD.obtenerMensajes(criterio, function (mensajes) {
-            if (mensajes == null) {
-                res.send("Error");
-            } else {
-                gestorBD.obtenerOfertas(criterioAux, function (ofertas) {
-                    if (ofertas == null) {
-                        res.send("Error");
-                    } else {
-                        let respuesta = swig.renderFile('views/mensajeNuevo.html',
-                            {
-                                identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
-                                usuario: req.session.usuario,
-                                mensajes: mensajes,
-                                oferta: ofertas[0]
-                            });
-                        res.send(respuesta);
-                    }
-                })
-            }
-        });
-    });
-
-    app.get("/oferta/conversaciones", function (req, res) {
-        let criterio = {interesado: req.session.usuario.email};
-        let criterioAux = {vendedor: req.session.usuario.email};
-
-        gestorBD.obtenerConversacion(criterio, function (conversaciones) {
-            if (conversaciones == null) {
-                res.send("Error");
-            } else {
-                gestorBD.obtenerConversacion(criterioAux, function (conversacionesAux) {
-                    if (conversacionesAux == null) {
-                        res.send("Error");
-                    } else {
-                        let conversacionesTotal = conversaciones.concat(conversacionesAux);
-                        let respuesta = swig.renderFile('views/conversaciones.html',
-                            {
-                                identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
-                                usuario: req.session.usuario,
-                                conversaciones: conversacionesTotal
-                            });
-                        res.send(respuesta);
-                    }
-                })
-            }
-        });
-    });
-
-    app.post("/oferta/mensaje/:id", function (req, res) {
-        let criterio = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
-
-        gestorBD.obtenerOfertas(criterio, function (ofertas) {
-            if (ofertas == null) {
-                res.redirect("/oferta/conversaciones?mensaje=Error al enviar el mensaje &tipoMensaje=alert-danger");
-            } else {
-                let mensaje = {
-                    oferta: ofertas[0],
-                    vendedor: ofertas[0].usuario,
-                    interesado: req.session.usuario,
-                    mensaje: req.body.texto,
-                    fecha: new Date(Date.now()).toUTCString(),
-                    leido: false
-                }
-                if (validarMensaje(mensaje, res)) {
-                    gestorBD.insertarMensaje(mensaje, function (id) {
-                        if (id == null) {
-                            res.send("Error");
-                        } else {
-                            res.redirect("/oferta/mensajes");
-                        }
-                    })
-                }
-            }
-        });
-    })
-
+    // W12 OPTATIVO: Marcar una oferta como destacada
     app.get("/oferta/destacar/:id", function (req, res) {
         let criterio = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
         gestorBD.obtenerOfertas(criterio, function (ofertas) {
             if (ofertas == null || ofertas.length === 0) {
+                logger.error("Destacar oferta: No se pudo obtener la oferta de la bbdd.");
                 res.send("Error al obtener la oferta.");
             } else {
                 if (ofertas[0].usuario !== req.session.usuario.email) {
@@ -304,6 +197,27 @@ module.exports = function (app, swig, gestorBD) {
         });
     });
 
+    // Listado total de ofertas destacadas en la aplicación
+    app.get("/oferta/destacadas", function (req, res) {
+        let criterio = {"destacada": "true"};
+
+        gestorBD.obtenerOfertas(criterio, function (lista) {
+            if (lista == null) {
+                logger.error("Ofertas Destacadas: No se pudo obtener la lista de ofertas de la bbdd.");
+                res.send("Error al listar ofertas");
+            } else {
+                let respuesta = swig.renderFile('views/listadoDestacadas.html',
+                    {
+                        listado: lista,
+                        identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
+                        usuario: req.session.usuario
+                    });
+                res.send(respuesta);
+            }
+        });
+    })
+
+    //Este método nos redirecciona a el listado de oferta si introducimos una URL incorrecta
     app.get('/oferta/*', function (req, res) {
         res.redirect("/oferta/listado");
     });
@@ -316,6 +230,7 @@ module.exports = function (app, swig, gestorBD) {
             }
             gestorBD.modificarOferta(criterio, ofertaNueva, function (result) {
                 if (result == null) {
+                    logger.error("Comprar oferta: No se pudo obtener la oferta de la bbdd.");
                     res.send("Error al modificar la oferta");
                 } else {
                     let nuevoDinero = {dinero: req.session.usuario.dinero - oferta.precio};
@@ -343,6 +258,7 @@ module.exports = function (app, swig, gestorBD) {
         }
         gestorBD.modificarOferta(criterio, oferta, function (resultado) {
             if (resultado == null) {
+                logger.error("Destacar oferta: No se pudo obtener la oferta de la bbdd.");
                 res.send("Error al listar ofertas");
             } else {
                 modificarSaldoUser({"dinero": usuario.dinero - 20}, req, res);
@@ -354,10 +270,12 @@ module.exports = function (app, swig, gestorBD) {
         let criterio = {"_id": gestorBD.mongo.ObjectID(req.session.usuario._id)};
         gestorBD.modificarUsuario(criterio, dinero, function (id) {
             if (id == null) {
+                logger.error("Modificar Saldo: No se pudo modificar el usuario de la bbdd.");
                 res.send("Error al insertar la oferta y restar el dinero");
             } else {
                 gestorBD.obtenerUsuarios(criterio, function (usuarios) {
                     if (usuarios == null || usuarios.length === 0) {
+                        logger.error("Modificar Saldo: No se pudo obtener el usuario de la bbdd.");
                         res.send("Error al actualizar el saldo del usuario.");
                     } else {
                         req.session.usuario = usuarios[0];
@@ -379,6 +297,7 @@ module.exports = function (app, swig, gestorBD) {
         }
         if (oferta.fecha === null || oferta.fecha === undefined) {
             res.redirect("/oferta/add?mensaje=Error en la fecha de la oferta: Formato incorrecto. &tipoMensaje=alert-danger");
+            logger.warn("Añadir oferta: Campo fecha igual a null.");
             return false;
         }
         if (oferta.precio === null || oferta.precio === undefined || oferta.precio <= 0) {
@@ -387,6 +306,7 @@ module.exports = function (app, swig, gestorBD) {
         }
         if (oferta.disponible === null || oferta.disponible === undefined || (oferta.disponible !== "Comprar" && oferta.disponible !== "Vendido")) {
             res.redirect("/oferta/add?mensaje=Error en el estado de la oferta: Debe ser mayor que 0. &tipoMensaje=alert-danger");
+            logger.warn("Añadir oferta: Campo disponible igual a null.");
             return false;
         }
         return validarCorreo(oferta.usuario, res);
@@ -394,6 +314,7 @@ module.exports = function (app, swig, gestorBD) {
 
     function validarUsuarioYOferta(usuario, idOferta, res) {
         if (idOferta === null || idOferta === undefined) {
+            logger.warn("Oferta: idOferta es null.");
             res.redirect("/oferta/listado?mensaje=Error en la oferta: Formato incorrecto. &tipoMensaje=alert-danger");
             return false;
         }
@@ -428,27 +349,4 @@ module.exports = function (app, swig, gestorBD) {
         return true;
     }
 
-    function validarMensaje(mensaje, res) {
-        if (mensaje.oferta == null || typeof mensaje.oferta === 'undefined') {
-            res.redirect("/oferta/mensajes?mensaje=Error en el mensaje: no se ha detectado el destino del mensaje.");
-            return false;
-        }
-        if (mensaje.mensaje == null || typeof mensaje.mensaje === 'undefined') {
-            res.redirect("/oferta/mensajes?mensaje=Error en el mensaje: no se ha detectado ningún mensaje.");
-            return false;
-        }
-        if (mensaje.fecha == null || typeof mensaje.fecha === 'undefined') {
-            res.redirect("/oferta/mensajes?mensaje=Error en la fecha del mensaje: se ha detectado un formato incorrecto.");
-            return false;
-        }
-        if (mensaje.vendedor == null || typeof mensaje.vendedor === 'undefined') {
-            res.redirect("/oferta/mensajes?mensaje=Error en el emisor del mensaje: se ha detectado un formato incorrecto.");
-            return false;
-        }
-        if (mensaje.interesado == null || typeof mensaje.interesado === 'undefined') {
-            res.redirect("/oferta/mensajes?mensaje=Error en el emisor del mensaje: se ha detectado un formato incorrecto.");
-            return false;
-        }
-        return true;
-    }
 };

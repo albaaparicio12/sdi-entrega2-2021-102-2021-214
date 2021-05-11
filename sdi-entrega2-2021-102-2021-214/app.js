@@ -5,8 +5,11 @@ let app = express();
 let fs = require('fs');
 let https = require('https');
 
-var rest = require('request');
+let rest = require('request');
 app.set('rest',rest);
+
+let log4js = require("log4js");
+let logger = log4js.getLogger();
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -20,7 +23,7 @@ app.use(function(req, res, next) {
 let jwt = require('jsonwebtoken');
 app.set('jwt',jwt);
 
-var expressSession = require('express-session');
+let expressSession = require('express-session');
 app.use(expressSession({
     secret: 'abcdefg',
     resave: true,
@@ -79,7 +82,7 @@ app.use('/api/conversacion', routerUsuarioToken);
 
 
 // routerUsuarioSession
-var routerUsuarioSession = express.Router();
+let routerUsuarioSession = express.Router();
 routerUsuarioSession.use(function(req, res, next) {
     console.log("routerUsuarioSession");
     if ( req.session.usuario ) {
@@ -123,10 +126,10 @@ app.set('clave','abcdefg');
 app.set('crypto',crypto);
 app.set('db', "mongodb://admin:sdi@wallapop-shard-00-00.j68zr.mongodb.net:27017,wallapop-shard-00-01.j68zr.mongodb.net:27017,wallapop-shard-00-02.j68zr.mongodb.net:27017/wallapop?ssl=true&replicaSet=atlas-v2jild-shard-0&authSource=admin&retryWrites=true&w=majority");
 
-require("./routes/rusuarios.js")(app, swig, gestorBD);
-require("./routes/rofertas.js")(app, swig, gestorBD);
-require("./routes/rapiofertas.js")(app, gestorBD);
-require("./routes/rapiconversaciones.js")(app, gestorBD);
+require("./routes/rusuarios.js")(app, swig, gestorBD, logger);
+require("./routes/rofertas.js")(app, swig, gestorBD, logger);
+require("./routes/rapiofertas.js")(app, gestorBD, logger);
+require("./routes/rapiconversaciones.js")(app, gestorBD, logger);
 
 app.get('/', function (req, res) {
     res.redirect('/identificarse');
