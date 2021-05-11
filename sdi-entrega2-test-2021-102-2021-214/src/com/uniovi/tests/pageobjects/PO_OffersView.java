@@ -34,6 +34,32 @@ public class PO_OffersView extends PO_NavView{
 		
 	}
 	
+	public static void addOfferREST(WebDriver driver, String titulop, String detallesp, double preciop, boolean destacadap) {
+		driver.navigate().to("");;
+		clickOptionWithId(driver, "mAñadir", "id");
+		
+		WebElement titulo = driver.findElement(By.name("titulo"));
+		titulo.click();
+		titulo.clear();
+		titulo.sendKeys(titulop);
+		WebElement detalles = driver.findElement(By.name("detalles"));
+		detalles.click();
+		detalles.clear();
+		detalles.sendKeys(detallesp);
+		WebElement precio = driver.findElement(By.name("precio"));
+		precio.click();
+		precio.clear();
+		precio.sendKeys(String.valueOf(preciop));
+		if(destacadap) {
+			WebElement destacada = driver.findElement(By.name("boxDestacada"));
+			destacada.click();
+		}
+			
+		By boton = By.className("btn");
+		driver.findElement(boton).click();	
+		
+	}
+	
 	static public void deleteOfferByName(WebDriver driver, String oferta) {		
 		clickOptionWithId(driver, "mOfertas", "id");		
 		clickOptionWithId(driver, "del"+oferta, "id");
@@ -65,6 +91,20 @@ public class PO_OffersView extends PO_NavView{
 		botonBusqueda.click();
 	}
 	
+	static public String getOfferByFirstPositionREST(WebDriver driver) {		
+		clickOptionWithId(driver, "barra-menu1", "id");
+		
+		List<WebElement> elementos = driver.findElements(By.xpath("/html/body/div/div/form/table/tbody[1]/tr/th[1]"));
+		return elementos.get(0).getText();
+	}
+	
+	static public WebElement numberOfferREST(WebDriver driver, int i) {		
+		clickOptionWithId(driver, "barra-menu1", "id");
+		
+		List<WebElement> barraBusqueda = driver.findElements(By.name("enviarMensaje"));
+		return barraBusqueda.get(i);
+	}
+	
 	static public int countRowsSearch(WebDriver driver) {
 		int offers = 0;		
 		List<WebElement> elementos = PO_View.checkElement(driver, "free", "//a[contains(@class, 'page-link')]");
@@ -84,6 +124,27 @@ public class PO_OffersView extends PO_NavView{
 		
 		List<WebElement> elementos = driver.findElements(By.xpath("/html/body/div/div[2]/div/div/div[2]/h5[1]/a"));
 		elementos.get(0).click();
+	}
+	
+	static public void sendMessageToOfferByName(WebDriver driver, String offer) {		
+		searchOfferByName(driver,offer);
+		
+		List<WebElement> elementos = driver.findElements(By.xpath("/html/body/div/div[2]/div/div/div[2]/h5[2]/a"));
+		elementos.get(0).click();
+	}
+	
+	static public void sendMessageToOfferByNameREST(WebDriver driver, String offer) {		
+		searchOfferByNameREST(driver,offer);
+		
+		WebElement elementos = driver.findElement(By.name("mensaje"));
+		elementos.click();
+	}
+	
+	static public void searchOfferByNameREST(WebDriver driver, String offer) {		
+		clickOptionWithId(driver, "barra-menu1", "id");
+		
+		List<WebElement> elements = checkElement(driver, "id", offer);
+		elements.get(0).click();
 	}
 	
 	static public void highlightOfferByName(WebDriver driver, String offer) {		

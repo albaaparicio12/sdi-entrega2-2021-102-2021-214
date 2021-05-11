@@ -40,8 +40,8 @@
                     "<td> " + converMostrar[i].vendedor + ":</td>" +
                     "<td> " + converMostrar[i].oferta.precio + "€</td>" +
                     "<td><a onclick=eliminarConversacion('" + converMostrar[i]._id + "')>Eliminar</a></td>" +
-                    "<td><a onclick=widgetConversacion('" + converMostrar[i].oferta._id + "')>Ver</a></td>" +
-                    "<td> No leidos: "+converMostrar[i].noLeidos+"</td>" +
+                    "<td><a id="+converMostrar[i].oferta.titulo+" onclick=widgetConversacion('" + converMostrar[i].oferta._id + "')>Ver</a></td>" +
+                    "<td> No leídos: "+converMostrar[i].noLeidos+"</td>" +
                     "</tr>");
             }
         }

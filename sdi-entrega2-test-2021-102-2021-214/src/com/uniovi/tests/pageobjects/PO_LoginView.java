@@ -19,5 +19,19 @@ public class PO_LoginView extends PO_NavView {
 		By boton = By.className("btn");
 		driver.findElement(boton).click();	
 	}
+	
+	static public void fillFormREST(WebDriver driver, String emailp, String passwordp) {
+		WebElement email = driver.findElement(By.name("email"));
+		email.click();
+		email.clear();
+		email.sendKeys(emailp);
+		WebElement password = driver.findElement(By.name("password"));
+		password.click();
+		password.clear();
+		password.sendKeys(passwordp);
+		//Pulsar el boton de Alta.
+		By boton = By.id("boton-login");
+		driver.findElement(boton).click();	
+	}
 
 }
