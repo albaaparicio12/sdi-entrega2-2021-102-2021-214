@@ -23,26 +23,42 @@ module.exports = function (app, gestorBD) {
             email: req.body.email,
             password: seguro
         }
-        gestorBD.obtenerUsuarios(criterio, function (usuarios) {
-            if (usuarios == null || usuarios.length === 0) {
-                res.status(401); //Unauthorized
+        validarUsuario(criterio, function (errores) {
+            if (errores !== null && errores.length > 0) {
+                res.status(403); //Forbidden
                 res.json({
-                    autenticado: false
+                    errores: errores
                 })
             } else {
-                req.session.usuario = criterio.email;
-                let token = app.get('jwt').sign(
-                    {usuario: criterio.email, tiempo: Date.now() / 1000},
-                    "secreto");
-                res.status(200);
-                res.json({
-                    autenticado: true,
-                    token: token
+                gestorBD.obtenerUsuarios(criterio, function (usuarios) {
+                    if (usuarios == null || usuarios.length === 0) {
+                        res.status(401); //Unauthorized
+                        res.json({
+                            autenticado: false
+                        })
+                    } else {
+                        req.session.usuario = criterio.email;
+                        let token = app.get('jwt').sign(
+                            {usuario: criterio.email, tiempo: Date.now() / 1000},
+                            "secreto");
+                        res.status(200);
+                        res.json({
+                            autenticado: true,
+                            token: token
+                        });
+                    }
                 });
             }
         });
-
     });
 
+    function validarUsuario(usuario, functionCallback) {
+        let errores = [];
+        if (usuario == null || typeof usuario === 'undefined')
+            errores.push("Error: no se ha detectado ningún usuario.");
+        if (usuario.email == null || typeof usuario.email === 'undefined' || usuario.email.length < 4)
+            errores.push("Error: email incorrecto");
 
+        functionCallback(errores);
+    }
 }

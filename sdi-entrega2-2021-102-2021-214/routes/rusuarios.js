@@ -1,35 +1,29 @@
-module.exports = function(app, swig, gestorBD) {
-    app.get("/usuario/add", function(req, res) {
-        let respuesta = swig.renderFile('views/bregistro.html',{
+module.exports = function (app, swig, gestorBD) {
+    app.get("/usuario/add", function (req, res) {
+        let respuesta = swig.renderFile('views/bregistro.html', {
             identificado: (req.session.usuario !== undefined && req.session.usuario !== null)
         });
         res.send(respuesta);
     });
 
-    app.post('/usuario/add', function(req, res) {
+    app.post('/usuario/add', function (req, res) {
         let contrasenaSegura = app.get('crypto').createHmac('sha256', app.get('clave'))
             .update(req.body.password).digest('hex');
         let repContrasenaSegura = app.get('crypto').createHmac('sha256', app.get('clave'))
             .update(req.body.repetirPassword).digest('hex');
         let usuario = {
-            nombre : req.body.nombre,
-            apellidos : req.body.apellidos,
-            email : req.body.email,
+            nombre: req.body.nombre,
+            apellidos: req.body.apellidos,
+            email: req.body.email,
             password: contrasenaSegura,
-            repetirPassword : repContrasenaSegura,
-            dinero : 100,
-            rol : "estandar"
+            repetirPassword: repContrasenaSegura,
+            dinero: 100,
+            rol: "estandar"
         }
-        if(req.body.password !== req.body.repetirPassword){
-            res.redirect("/usuario/add?mensaje=Error con las passwords, no coinciden &tipoMensaje=alert-danger");
-        }
-        if(!req.body.email.contains("@")){
-            res.redirect("/usuario/add?mensaje=Error con el email &tipoMensaje=alert-danger");
-        }
-        else {
+        if (validarUsuario(usuario, res)) {
             usuarioYaRegistrado({"email": usuario.email}, function (estaRegistrado) {
                 if (estaRegistrado) {
-                    res.redirect("/usuario/add?mensaje=Este email ya está registrado &tipoMensaje=alert-danger");
+                    res.redirect("/usuario/add?mensaje=Este email ya está registrado. &tipoMensaje=alert-danger");
                 } else {
                     gestorBD.insertarUsuario(usuario, function (id) {
                         if (id == null) {
@@ -39,7 +33,7 @@ module.exports = function(app, swig, gestorBD) {
                             let respuesta = swig.renderFile('views/opciones.html',
                                 {
                                     identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
-                                    usuario : usuario
+                                    usuario: usuario
                                 });
                             res.send(respuesta);
                         }
@@ -47,46 +41,47 @@ module.exports = function(app, swig, gestorBD) {
                 }
             })
         }
-
     })
 
-    app.get("/identificarse", function(req, res) {
-        let respuesta = swig.renderFile('views/bidentificacion.html',{
+    app.get("/identificarse", function (req, res) {
+        let respuesta = swig.renderFile('views/bidentificacion.html', {
             identificado: (req.session.usuario !== undefined && req.session.usuario !== null)
         });
         res.send(respuesta);
     });
 
-    app.post("/identificarse", function(req, res) {
+    app.post("/identificarse", function (req, res) {
         let seguro = app.get("crypto").createHmac('sha256', app.get('clave'))
             .update(req.body.password).digest('hex');
         let criterio = {
-            email : req.body.email,
-            password : seguro
+            email: req.body.email,
+            password: seguro
         }
-        gestorBD.obtenerUsuarios(criterio, function(usuarios) {
-            if (usuarios === null || usuarios.length === 0) {
-                req.session.usuario = null;
-                res.redirect("/identificarse" +
-                    "?mensaje=Email o password incorrecto"+
-                    "&tipoMensaje=alert-danger ");
-            } else {
-                req.session.usuario = usuarios[0];
-                let respuesta;
-                if(req.session.usuario.email === "admin@email.com"){
-                    respuesta = swig.renderFile('views/opcionesAdmin.html',{
-                        usuario : req.session.usuario,
-                        identificado: true
-                    });
+        if (validarCorreo(req.body.email, res)) {
+            gestorBD.obtenerUsuarios(criterio, function (usuarios) {
+                if (usuarios === null || usuarios.length === 0) {
+                    req.session.usuario = null;
+                    res.redirect("/identificarse" +
+                        "?mensaje=Email o password incorrecto" +
+                        "&tipoMensaje=alert-danger ");
                 } else {
-                    respuesta =swig.renderFile('views/opciones.html',{
-                        usuario : req.session.usuario,
-                        identificado: true
-                    });
+                    req.session.usuario = usuarios[0];
+                    let respuesta;
+                    if (req.session.usuario.rol === "admin") {
+                        respuesta = swig.renderFile('views/opcionesAdmin.html', {
+                            usuario: req.session.usuario,
+                            identificado: true
+                        });
+                    } else {
+                        respuesta = swig.renderFile('views/opciones.html', {
+                            usuario: req.session.usuario,
+                            identificado: true
+                        });
+                    }
+                    res.send(respuesta);
                 }
-                res.send(respuesta);
-            }
-        });
+            });
+        }
     });
 
     app.get('/desconectarse', function (req, res) {
@@ -94,17 +89,17 @@ module.exports = function(app, swig, gestorBD) {
         res.redirect("/identificarse");
     })
 
-    app.get('/usuario/listado', function (req, res){
+    app.get('/usuario/listado', function (req, res) {
         let criterio = {};
-        gestorBD.obtenerUsuarios(criterio, function(lista){
-            if(lista == null){
+        gestorBD.obtenerUsuarios(criterio, function (lista) {
+            if (lista == null) {
                 res.send("Error al listar");
             } else {
-                let listaSinAdmin = lista.filter((user) => user.email !== "admin@email.com");
+                let listaSinAdmin = lista.filter((user) => user.rol !== "admin");
                 let respuesta = swig.renderFile('views/listado.html',
                     {
-                        listado : listaSinAdmin,
-                        usuario : req.session.usuario,
+                        listado: listaSinAdmin,
+                        usuario: req.session.usuario,
                         identificado: (req.session.usuario !== undefined && req.session.usuario !== null)
                     });
                 res.send(respuesta);
@@ -112,9 +107,9 @@ module.exports = function(app, swig, gestorBD) {
         });
     });
 
-    app.post("/usuario/borrar", function (req,res){
+    app.post("/usuario/borrar", function (req, res) {
         let listaCheckBoxes = req.body.box;
-        if(listaCheckBoxes !== null || listaCheckBoxes.length > 0) {
+        if (listaCheckBoxes !== null && listaCheckBoxes.length > 0 && req.session.usuario.rol === "admin") {
             for (let box in listaCheckBoxes) {
                 let criterio = {email: listaCheckBoxes[box]};
                 gestorBD.eliminarUsuario(criterio, function (result) {
@@ -123,24 +118,51 @@ module.exports = function(app, swig, gestorBD) {
                     }
                 });
             }
-            let respuesta = swig.renderFile('views/opcionesAdmin.html',{
-                usuario : req.session.usuario,
+            let respuesta = swig.renderFile('views/opcionesAdmin.html', {
+                usuario: req.session.usuario,
                 identificado: (req.session.usuario !== undefined && req.session.usuario !== null)
             });
             res.send(respuesta);
-        }
-        else{
+        } else {
             res.redirect("/usuario/listado");
         }
     });
 
-    function usuarioYaRegistrado(usuario, functionCallback){
-        gestorBD.obtenerUsuarios(usuario,function(usuarios){
-            if(usuarios === null || usuarios.length === 0){
+    function usuarioYaRegistrado(usuario, functionCallback) {
+        gestorBD.obtenerUsuarios(usuario, function (usuarios) {
+            if (usuarios === null || usuarios.length === 0) {
                 functionCallback(false);
             } else {
                 functionCallback(true);
             }
         })
+    }
+
+    function validarUsuario(usuario, res) {
+        if (usuario.password === null || usuario.password === undefined || usuario.repetirPassword === null || usuario.repetirPassword === undefined) {
+            res.redirect("/usuario/add?mensaje=Error en la contraseña: Formato incorrecto. &tipoMensaje=alert-danger");
+            return false;
+        }
+        if (usuario.nombre === null || usuario.nombre === undefined || usuario.nombre.length < 3) {
+            res.redirect("/usuario/add?mensaje=Error en el nombre: Deber tener más de 3 caracteres. &tipoMensaje=alert-danger");
+            return false;
+        }
+        if (usuario.apellidos === null || usuario.apellidos === undefined || usuario.apellidos.length < 3) {
+            res.redirect("/usuario/add?mensaje=Error en los apellidos: Debe tener más de 3 caracteres. &tipoMensaje=alert-danger");
+            return false;
+        }
+        if (usuario.password !== usuario.repetirPassword) {
+            res.redirect("/usuario/add?mensaje=Error con las passwords: no coinciden. &tipoMensaje=alert-danger");
+            return false;
+        }
+        return validarCorreo(usuario.email, res);
+    }
+
+    function validarCorreo(correo, res) {
+        if (correo === null || correo === undefined || correo.length < 4) {
+            res.redirect("/identificarse?mensaje=Error en el email: Debe tener más de 4 caracteres e incluir un signo @. &tipoMensaje=alert-danger");
+            return false;
+        }
+        return true;
     }
 };

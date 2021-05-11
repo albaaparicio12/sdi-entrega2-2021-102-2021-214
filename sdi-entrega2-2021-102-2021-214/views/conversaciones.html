@@ -8,7 +8,7 @@
     <form class="form-horizontal">
         <table class="table table-hover" id="tableConversInt">
             <thead>
-            <h2>Lista de conversaciones de interesado</h2>
+            <h2>Lista de conversaciones</h2>
             <tr>
                 <th>Oferta</th>
                 <th>Interesado</th>
@@ -16,25 +16,6 @@
             </tr>
             </thead>
             {% for conver in conversaciones %}
-            <tbody>
-            <tr>
-                <th>{{ conver.oferta }}</th>
-                <th>{{ conver.interesado }}</th>
-                <th>{{ conver.vendedor }}</th>
-            </tr>
-            </tbody>
-            {% endfor %}
-        </table>
-        <table class="table table-hover" id="tableConversVen">
-            <thead>
-            <h2>Lista de conversaciones de vendedor</h2>
-            <tr>
-                <th>Oferta</th>
-                <th>Interesado</th>
-                <th width="130px">Vendedor</th>
-            </tr>
-            </thead>
-            {% for conver in conversacionesAux %}
             <tbody>
             <tr>
                 <th>{{ conver.oferta }}</th>

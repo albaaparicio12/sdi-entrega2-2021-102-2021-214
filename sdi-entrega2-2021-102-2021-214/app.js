@@ -123,13 +123,22 @@ app.set('clave','abcdefg');
 app.set('crypto',crypto);
 app.set('db', "mongodb://admin:sdi@wallapop-shard-00-00.j68zr.mongodb.net:27017,wallapop-shard-00-01.j68zr.mongodb.net:27017,wallapop-shard-00-02.j68zr.mongodb.net:27017/wallapop?ssl=true&replicaSet=atlas-v2jild-shard-0&authSource=admin&retryWrites=true&w=majority");
 
-require("./routes/rusuarios.js")(app, swig, gestorBD); // (app, param1, param2, etc.)
+require("./routes/rusuarios.js")(app, swig, gestorBD);
 require("./routes/rofertas.js")(app, swig, gestorBD);
 require("./routes/rapiofertas.js")(app, gestorBD);
 require("./routes/rapiconversaciones.js")(app, gestorBD);
 
 app.get('/', function (req, res) {
     res.redirect('/identificarse');
+});
+
+//Manejo de errores
+app.use( function(err,req,res,next) {
+    console.log("Error producido: "+err);
+    if(!res.headersSent){
+        res.status(400);
+        res.send("Recurso no disponible");
+    }
 });
 
 https.createServer({

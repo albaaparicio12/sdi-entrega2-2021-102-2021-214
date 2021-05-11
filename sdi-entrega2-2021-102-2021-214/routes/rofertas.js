@@ -18,16 +18,13 @@ module.exports = function (app, swig, gestorBD) {
             comprador: null,
             destacada: req.body.boxDestacada
         }
-        if (oferta.precio <= 0) {
-            res.redirect("/oferta/add?mensaje=El precio de la oferta debe ser mayor que 0. &tipoMensaje=alert-danger");
-        } else {
+        if (validarOferta(oferta, res)) {
             gestorBD.insertarOferta(oferta, function (id) {
                 if (id == null) {
                     res.redirect("/oferta/add?mensaje=Error al insertar la oferta &tipoMensaje=alert-danger");
                 } else {
                     if (oferta.destacada === "true") {
-                        let criterio = {"_id": gestorBD.mongo.ObjectID(req.session.usuario._id)};
-                        nuevaOfertaDestacada(criterio, req, res);
+                        pagarOfertaDestacada(req, res);
                     } else {
                         res.redirect("/oferta/listado");
                     }
@@ -39,23 +36,35 @@ module.exports = function (app, swig, gestorBD) {
     app.get("/oferta/borrar/:id", function (req, res) {
         let criterio = {$and: [{"_id": gestorBD.mongo.ObjectID(req.params.id)}, {"disponible": "Comprar"}]};
         let criterioU = {"usuario": req.session.usuario.email};
-        gestorBD.eliminarOferta(criterio, function (result) {
-            if (result === false) {
-                res.redirect("/oferta/borrar?mensaje=Error al borrar la oferta. &tipoMensaje=alert-danger");
+        gestorBD.obtenerOfertas({"_id": gestorBD.mongo.ObjectID(req.params.id)}, function (ofertas) {
+            if (ofertas == null || ofertas.length === 0) {
+                res.send("Error al obtener la oferta.");
             } else {
-                gestorBD.obtenerOfertas(criterioU, function (lista) {
-                    if (lista == null) {
-                        res.send("Error al listar ofertas");
-                    } else {
-                        let respuesta = swig.renderFile('views/listadoOfertas.html',
-                            {
-                                listado: lista,
-                                identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
-                                usuario: req.session.usuario
-                            });
-                        res.send(respuesta);
+                if (ofertas[0].usuario !== req.session.usuario.email) {
+                    res.redirect("/oferta/listado?mensaje=Error: No eres dueño de la oferta seleccionada. &tipoMensaje=alert-danger");
+                } else {
+                    if (validarUsuarioYOferta(req.session.usuario.email, req.params.id, res)) {
+                        gestorBD.eliminarOferta(criterio, function (result) {
+                            if (result === false) {
+                                res.redirect("/oferta/borrar?mensaje=Error al borrar la oferta. &tipoMensaje=alert-danger");
+                            } else {
+                                gestorBD.obtenerOfertas(criterioU, function (lista) {
+                                    if (lista == null) {
+                                        res.send("Error al listar ofertas");
+                                    } else {
+                                        let respuesta = swig.renderFile('views/listadoOfertas.html',
+                                            {
+                                                listado: lista,
+                                                identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
+                                                usuario: req.session.usuario
+                                            });
+                                        res.send(respuesta);
+                                    }
+                                });
+                            }
+                        });
                     }
-                });
+                }
             }
         });
 
@@ -121,9 +130,10 @@ module.exports = function (app, swig, gestorBD) {
                         paginas.push(i);
                     }
                 }
-                let respuesta = swig.renderFile('views/buscarOferta.html',
+                let listaSinOfertasUsuario = ofertas.filter((oferta) => oferta.usuario !== req.session.usuario.email);
+                let respuesta = swig.renderFile('views/tienda.html',
                     {
-                        ofertas: ofertas,
+                        ofertas: listaSinOfertasUsuario,
                         paginas: paginas,
                         actual: pg,
                         usuario: req.session.usuario,
@@ -137,11 +147,13 @@ module.exports = function (app, swig, gestorBD) {
     app.get("/oferta/comprar/:id", function (req, res) {
         let criterio = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
 
-        gestorBD.obtenerOfertas(criterio, function (lista) {
-            if (lista == null) {
+        gestorBD.obtenerOfertas(criterio, function (ofertas) {
+            if (ofertas == null) {
                 res.send("Error al comprar oferta");
             } else {
-                comprarOferta(lista, criterio, req, res);
+                if (validarOferta(ofertas[0], res)) {
+                    comprarOferta(ofertas[0], criterio, req, res);
+                }
             }
         });
     });
@@ -170,7 +182,7 @@ module.exports = function (app, swig, gestorBD) {
 
         gestorBD.obtenerMensajes(criterio, function (mensajes) {
             if (mensajes == null) {
-                res.send("error")
+                res.send("Error al obtener sus mensajes.")
             } else {
                 gestorBD.obtenerMensajes(criterioAux, function (mensajes2) {
                     if (mensajes2 == null) {
@@ -228,12 +240,12 @@ module.exports = function (app, swig, gestorBD) {
                     if (conversacionesAux == null) {
                         res.send("Error");
                     } else {
+                        let conversacionesTotal = conversaciones.concat(conversacionesAux);
                         let respuesta = swig.renderFile('views/conversaciones.html',
                             {
                                 identificado: (req.session.usuario !== undefined && req.session.usuario !== null),
                                 usuario: req.session.usuario,
-                                conversacionesInt: conversaciones,
-                                conversacionesVen: conversacionesAux
+                                conversaciones: conversacionesTotal
                             });
                         res.send(respuesta);
                     }
@@ -247,84 +259,77 @@ module.exports = function (app, swig, gestorBD) {
 
         gestorBD.obtenerOfertas(criterio, function (ofertas) {
             if (ofertas == null) {
-                res.redirect("/oferta/add?mensaje=Error al insertar la oferta &tipoMensaje=alert-danger");
+                res.redirect("/oferta/conversaciones?mensaje=Error al enviar el mensaje &tipoMensaje=alert-danger");
             } else {
                 let mensaje = {
                     oferta: ofertas[0],
                     vendedor: ofertas[0].usuario,
                     interesado: req.session.usuario,
                     mensaje: req.body.texto,
+                    fecha: new Date(Date.now()).toUTCString(),
                     leido: false
                 }
-
-                gestorBD.insertarMensaje(mensaje, function (id) {
-                    if (id == null) {
-                        res.send("Error");
-                    } else {
-                        res.redirect("/oferta/mensajes");
-                    }
-                })
+                if (validarMensaje(mensaje, res)) {
+                    gestorBD.insertarMensaje(mensaje, function (id) {
+                        if (id == null) {
+                            res.send("Error");
+                        } else {
+                            res.redirect("/oferta/mensajes");
+                        }
+                    })
+                }
             }
         });
     })
 
     app.get("/oferta/destacar/:id", function (req, res) {
         let criterio = {"_id": gestorBD.mongo.ObjectID(req.params.id)};
-
-        gestorBD.obtenerOfertas(criterio, function (result) {
-            if (result == null) {
-                res.send("Error al listar ofertas");
+        gestorBD.obtenerOfertas(criterio, function (ofertas) {
+            if (ofertas == null || ofertas.length === 0) {
+                res.send("Error al obtener la oferta.");
             } else {
-                if (result[0].destacada === "true") {
-                    res.redirect("/oferta/listado?mensaje=Error - Ya está destacada&tipoMensaje=alert-danger");
+                if (ofertas[0].usuario !== req.session.usuario.email) {
+                    res.redirect("/oferta/listado?mensaje=Error: No eres dueño de la oferta seleccionada. &tipoMensaje=alert-danger");
                 } else {
-                    let oferta = result[0];
-                    destacarOferta(oferta, criterio, req, res);
+                    if (validarUsuarioYOferta(req.session.usuario.email, req.params.id, res)) {
+                        if (ofertas[0].destacada === "true") {
+                            res.redirect("/oferta/listado?mensaje=Error - Ya está destacada&tipoMensaje=alert-danger");
+                        } else {
+                            let oferta = ofertas[0];
+                            destacarOferta(oferta, criterio, req, res);
+                        }
+                    }
                 }
-
             }
-        })
+        });
     });
 
-    function comprarOferta(lista, criterio, req, res) {
-        if (lista[0].disponible === "Vendido") {
-            res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
-                "ya está vendida &tipoMensaje=alert-danger");
-        } else if (String(lista[0].usuario) === String(req.session.usuario.email)) {
-            res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
-                "es tu oferta &tipoMensaje=alert-danger");
-        } else if (lista[0].precio <= req.session.usuario.dinero) {
-            let oferta = {
-                usuario: lista[0].usuario,
-                titulo: lista[0].titulo,
-                detalles: lista[0].detalles,
-                fecha: lista[0].fecha,
-                precio: lista[0].precio,
+    app.get('/oferta/*', function (req, res) {
+        res.redirect("/oferta/listado");
+    });
+
+    function comprarOferta(oferta, criterio, req, res) {
+        if (validarSiPuedoComprarOferta(oferta, req, res)) {
+            let ofertaNueva = {
                 disponible: "Vendido",
-                comprador: req.session.usuario.email,
-                destacada: lista[0].destacada
+                comprador: req.session.usuario.email
             }
-            gestorBD.modificarOferta(criterio, oferta, function (result) {
+            gestorBD.modificarOferta(criterio, ofertaNueva, function (result) {
                 if (result == null) {
                     res.send("Error al modificar la oferta");
                 } else {
-                    let criterio_usuario = {"_id": gestorBD.mongo.ObjectID(req.session.usuario._id)};
-                    let nuevoDinero = {dinero: req.session.usuario.dinero - lista[0].precio};
-                    modificarSaldoUser(criterio_usuario, nuevoDinero, req, res);
+                    let nuevoDinero = {dinero: req.session.usuario.dinero - oferta.precio};
+                    modificarSaldoUser(nuevoDinero, req, res);
                 }
-            })
-        } else {
-            res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
-                "no tienes suficiente dinero &tipoMensaje=alert-danger");
+            });
         }
-
     }
 
-    function nuevaOfertaDestacada(criterio, req, res) {
+    function pagarOfertaDestacada(req, res) {
         let usuario = req.session.usuario;
         if (usuario.dinero >= 20) {
             let dinero = {"dinero": usuario.dinero - 20};
-            modificarSaldoUser(criterio, dinero, req, res);
+            modificarSaldoUser(dinero, req, res);
         } else {
             res.redirect("/oferta/add?mensaje=Error - No tienes suficiente dinero!&tipoMensaje=alert-danger");
         }
@@ -340,19 +345,19 @@ module.exports = function (app, swig, gestorBD) {
             if (resultado == null) {
                 res.send("Error al listar ofertas");
             } else {
-                let criterioAux = {"_id": gestorBD.mongo.ObjectID(req.session.usuario._id)};
-                modificarSaldoUser(criterioAux, {"dinero": usuario.dinero - 20}, req, res);
+                modificarSaldoUser({"dinero": usuario.dinero - 20}, req, res);
             }
         });
     }
 
-    function modificarSaldoUser(criterio, dinero, req, res) {
+    function modificarSaldoUser(dinero, req, res) {
+        let criterio = {"_id": gestorBD.mongo.ObjectID(req.session.usuario._id)};
         gestorBD.modificarUsuario(criterio, dinero, function (id) {
             if (id == null) {
                 res.send("Error al insertar la oferta y restar el dinero");
             } else {
                 gestorBD.obtenerUsuarios(criterio, function (usuarios) {
-                    if (usuarios == null || usuarios.length == 0) {
+                    if (usuarios == null || usuarios.length === 0) {
                         res.send("Error al actualizar el saldo del usuario.");
                     } else {
                         req.session.usuario = usuarios[0];
@@ -363,5 +368,87 @@ module.exports = function (app, swig, gestorBD) {
         });
     }
 
+    function validarOferta(oferta, res) {
+        if (oferta.titulo === null || oferta.titulo === undefined || oferta.titulo.length < 3) {
+            res.redirect("/oferta/add?mensaje=Error en el titulo de la oferta: Formato incorrecto. &tipoMensaje=alert-danger");
+            return false;
+        }
+        if (oferta.detalles === null || oferta.detalles === undefined || oferta.detalles.length < 3) {
+            res.redirect("/oferta/add?mensaje=Error en la descripción de la oferta: Formato incorrecto. &tipoMensaje=alert-danger");
+            return false;
+        }
+        if (oferta.fecha === null || oferta.fecha === undefined) {
+            res.redirect("/oferta/add?mensaje=Error en la fecha de la oferta: Formato incorrecto. &tipoMensaje=alert-danger");
+            return false;
+        }
+        if (oferta.precio === null || oferta.precio === undefined || oferta.precio <= 0) {
+            res.redirect("/oferta/add?mensaje=Error en el precio de la oferta: Debe ser mayor que 0. &tipoMensaje=alert-danger");
+            return false;
+        }
+        if (oferta.disponible === null || oferta.disponible === undefined || (oferta.disponible !== "Comprar" && oferta.disponible !== "Vendido")) {
+            res.redirect("/oferta/add?mensaje=Error en el estado de la oferta: Debe ser mayor que 0. &tipoMensaje=alert-danger");
+            return false;
+        }
+        return validarCorreo(oferta.usuario, res);
+    }
 
+    function validarUsuarioYOferta(usuario, idOferta, res) {
+        if (idOferta === null || idOferta === undefined) {
+            res.redirect("/oferta/listado?mensaje=Error en la oferta: Formato incorrecto. &tipoMensaje=alert-danger");
+            return false;
+        }
+        return validarCorreo(usuario, res);
+
+    }
+
+    function validarSiPuedoComprarOferta(oferta, req, res) {
+        if (oferta.disponible === "Vendido") {
+            res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
+                "ya está vendida &tipoMensaje=alert-danger");
+            return false;
+        }
+        if (String(oferta.usuario) === String(req.session.usuario.email)) {
+            res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
+                "es tu oferta &tipoMensaje=alert-danger");
+            return false;
+        }
+        if (oferta.precio > req.session.usuario.dinero) {
+            res.redirect("/oferta/tienda?mensaje=Error al comprar oferta, " +
+                "no tienes suficiente dinero. &tipoMensaje=alert-danger");
+            return false;
+        }
+        return true;
+    }
+
+    function validarCorreo(correo, res) {
+        if (correo === null || correo === undefined || correo.length < 4) {
+            res.redirect("/oferta/add?mensaje=Error en el usuario: Debe tener más de 4 e incluir un signo @. &tipoMensaje=alert-danger");
+            return false;
+        }
+        return true;
+    }
+
+    function validarMensaje(mensaje, res) {
+        if (mensaje.oferta == null || typeof mensaje.oferta === 'undefined') {
+            res.redirect("/oferta/mensajes?mensaje=Error en el mensaje: no se ha detectado el destino del mensaje.");
+            return false;
+        }
+        if (mensaje.mensaje == null || typeof mensaje.mensaje === 'undefined') {
+            res.redirect("/oferta/mensajes?mensaje=Error en el mensaje: no se ha detectado ningún mensaje.");
+            return false;
+        }
+        if (mensaje.fecha == null || typeof mensaje.fecha === 'undefined') {
+            res.redirect("/oferta/mensajes?mensaje=Error en la fecha del mensaje: se ha detectado un formato incorrecto.");
+            return false;
+        }
+        if (mensaje.vendedor == null || typeof mensaje.vendedor === 'undefined') {
+            res.redirect("/oferta/mensajes?mensaje=Error en el emisor del mensaje: se ha detectado un formato incorrecto.");
+            return false;
+        }
+        if (mensaje.interesado == null || typeof mensaje.interesado === 'undefined') {
+            res.redirect("/oferta/mensajes?mensaje=Error en el emisor del mensaje: se ha detectado un formato incorrecto.");
+            return false;
+        }
+        return true;
+    }
 };
