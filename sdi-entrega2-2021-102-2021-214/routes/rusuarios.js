@@ -122,7 +122,7 @@ module.exports = function (app, swig, gestorBD, logger) {
     });
 
     //W5 Administrador: Borrado múltiple de usuarios.
-    app.post("/usuario/borrar", function (req, res) {
+    app.post("/usuario/borrar", async function (req, res) {
         let listaCheckBoxes = req.body.box;
         if (listaCheckBoxes !== null && listaCheckBoxes.length > 0 && req.session.usuario.rol === "admin") {
             for (let box in listaCheckBoxes) {
