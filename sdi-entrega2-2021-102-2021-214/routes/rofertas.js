@@ -229,8 +229,8 @@ module.exports = function (app, swig, gestorBD) {
     });
 
     app.get("/oferta/conversaciones", function (req, res) {
-        let criterio = {interesado: req.session.usuario};
-        let criterioAux = {vendedor: req.session.usuario};
+        let criterio = {interesado: req.session.usuario.email};
+        let criterioAux = {vendedor: req.session.usuario.email};
 
         gestorBD.obtenerConversacion(criterio, function (conversaciones) {
             if (conversaciones == null) {
