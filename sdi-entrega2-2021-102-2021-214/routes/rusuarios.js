@@ -115,6 +115,34 @@ module.exports = function (app, swig, gestorBD) {
                 gestorBD.eliminarUsuario(criterio, function (result) {
                     if (result == null) {
                         res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
+                    } else {
+                        let criterio2 = {"usuario" : criterio.email};
+                        gestorBD.eliminarOferta(criterio2, function(result){
+                            if(result == null) {
+                                res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
+                            } else {
+                                let criterio3 = {"emisor" : criterio.email};
+                                gestorBD.eliminarMensajes(criterio3, function(result2){
+                                    if(result2 == null){
+                                        res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
+                                    } else {
+                                        let criterio4 = {"vendedor" : criterio.email};
+                                        gestorBD.eliminarConversacion(criterio4, function(result3){
+                                            if(result3 == null){
+                                                res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
+                                            } else {
+                                                let criterio5 = {"interesado" : criterio.email};
+                                                gestorBD.eliminarConversacion(criterio5, function(result3){
+                                                    if(result3 == null){
+                                                        res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
+                                                    }
+                                                })
+                                            }
+                                        })
+                                    }
+                                })
+                            }
+                        })
                     }
                 });
             }
