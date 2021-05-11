@@ -1,5 +1,7 @@
 module.exports = function (app, gestorBD) {
 
+    //S2 Usuario identificado: Mostrar listado de ofertas disponibles (Sólo las ofertas de los otros
+    // usuarios)
     app.get("/api/ofertas", function (req, res) {
         gestorBD.obtenerOfertas({}, function (ofertas) {
             if (ofertas == null) {
@@ -16,6 +18,7 @@ module.exports = function (app, gestorBD) {
         });
     });
 
+    //S1 Identificarse como usuario vía token
     app.post("/api/autenticar", function (req, res) {
         let seguro = app.get("crypto").createHmac('sha256', app.get('clave'))
             .update(req.body.password).digest('hex');
@@ -34,7 +37,8 @@ module.exports = function (app, gestorBD) {
                     if (usuarios == null || usuarios.length === 0) {
                         res.status(401); //Unauthorized
                         res.json({
-                            autenticado: false
+                            autenticado: false,
+                            error: "Email o contraseña incorrectos."
                         })
                     } else {
                         req.session.usuario = criterio.email;
