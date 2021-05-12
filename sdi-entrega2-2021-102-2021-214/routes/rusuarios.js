@@ -127,44 +127,46 @@ module.exports = function (app, swig, gestorBD, logger) {
         if (listaCheckBoxes !== null && listaCheckBoxes.length > 0 && req.session.usuario.rol === "admin") {
             for (let box in listaCheckBoxes) {
                 let criterio = {email: listaCheckBoxes[box]};
-                gestorBD.eliminarUsuario(criterio, function (result) {
-                    if (result == null) {
-                        logger.error("Eliminar usuarios: No se pudo obtener el usuario a borrar de la bbdd.");
-                        res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
-                    } else {
-                        let criterio2 = {"usuario" : criterio.email};
-                        gestorBD.eliminarOferta(criterio2, function(result){
-                            if(result == null) {
-                                logger.error("Eliminar usuarios: No se pudo obtener las ofertas del usuario a borrar de la bbdd.");
-                                res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
-                            } else {
-                                let criterio3 = {"emisor" : criterio.email};
-                                gestorBD.eliminarMensajes(criterio3, function(result2){
-                                    if(result2 == null){
-                                        logger.error("Eliminar usuarios: No se pudo obtener los mensajes del usuario a borrar de la bbdd.");
-                                        res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
-                                    } else {
-                                        let criterio4 = {"vendedor" : criterio.email};
-                                        gestorBD.eliminarConversacion(criterio4, function(result3){
-                                            if(result3 == null){
-                                                logger.error("Eliminar usuarios: No se pudo obtener las conversaciones del usuario a borrar de la bbdd.");
-                                                res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
-                                            } else {
-                                                let criterio5 = {"interesado" : criterio.email};
-                                                gestorBD.eliminarConversacion(criterio5, function(result3){
-                                                    if(result3 == null){
-                                                        logger.error("Eliminar usuarios: No se pudo obtener las conversaciones del usuario a borrar de la bbdd.");
-                                                        res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
-                                                    }
-                                                })
-                                            }
-                                        })
-                                    }
-                                })
-                            }
-                        })
-                    }
-                });
+                if(listaCheckBoxes[box] !== "admin@email.com"){
+                    gestorBD.eliminarUsuario(criterio, function (result) {
+                        if (result == null) {
+                            logger.error("Eliminar usuarios: No se pudo obtener el usuario a borrar de la bbdd.");
+                            res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
+                        } else {
+                            let criterio2 = {"usuario" : criterio.email};
+                            gestorBD.eliminarOferta(criterio2, function(result){
+                                if(result == null) {
+                                    logger.error("Eliminar usuarios: No se pudo obtener las ofertas del usuario a borrar de la bbdd.");
+                                    res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
+                                } else {
+                                    let criterio3 = {"emisor" : criterio.email};
+                                    gestorBD.eliminarMensajes(criterio3, function(result2){
+                                        if(result2 == null){
+                                            logger.error("Eliminar usuarios: No se pudo obtener los mensajes del usuario a borrar de la bbdd.");
+                                            res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
+                                        } else {
+                                            let criterio4 = {"vendedor" : criterio.email};
+                                            gestorBD.eliminarConversacion(criterio4, function(result3){
+                                                if(result3 == null){
+                                                    logger.error("Eliminar usuarios: No se pudo obtener las conversaciones del usuario a borrar de la bbdd.");
+                                                    res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
+                                                } else {
+                                                    let criterio5 = {"interesado" : criterio.email};
+                                                    gestorBD.eliminarConversacion(criterio5, function(result3){
+                                                        if(result3 == null){
+                                                            logger.error("Eliminar usuarios: No se pudo obtener las conversaciones del usuario a borrar de la bbdd.");
+                                                            res.redirect("/usuario/borrar?mensaje=Error al borrar usuarios &tipoMensaje=alert-danger");
+                                                        }
+                                                    })
+                                                }
+                                            })
+                                        }
+                                    })
+                                }
+                            })
+                        }
+                    });
+                }
             }
             let respuesta = swig.renderFile('views/opcionesAdmin.html', {
                 usuario: req.session.usuario,
